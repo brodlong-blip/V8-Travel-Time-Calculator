@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sanscorp Pit Travel Time Tool – v8</title>
+
+  <style>
+    :root{
+      --sanscorp-blue:#0B5FA5;
+      --sanscorp-dark:#2F2F2F;
+      --sanscorp-light:#F5F5F5;
+      --sanscorp-accent:#1E88E5;
+      --card-border:#ddd;
+      --table-border:#ccc;
+      --best:#d9ebfb;
+    }
+
+    body{
+      font-family: Arial, sans-serif;
+      margin:0;
+      padding:0;
+      background:var(--sanscorp-light);
+      color:#111;
+    }
+
+    #controls{
+      padding:16px;
+      background:#fff;
+      border-bottom:4px solid var(--sanscorp-blue);
+    }
+
+    /* Brand header */
+    .brandRow{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .brandLogo{
+      height:44px;
+      width:auto;
+      display:block;
+      filter:
+        brightness(0)
+        saturate(100%)
+        invert(18%)
+        sepia(5%)
+        saturate(500%)
+        hue-rotate(180deg)
+        brightness(70%)
+        contrast(110%);
+    }
+    .brandTitle{
+      margin:0;
+      font-size:20px;
+      font-weight:700;
+      color:var(--sanscorp-dark);
+    }
+    .brandSub{
+      margin:2px 0 0 0;
+      font-size:12px;
+      color:#555;
+    }
+
+    /* Layout helpers */
+    .rowWrap{ display:flex; flex-wrap:wrap; gap:12px; align-items:flex-start; }
+    .colGrow{ flex: 1 1 720px; min-width: 520px; }
+    .colSide{ flex: 0 0 420px; max-width: 420px; }
+
+    .sectionTitle{
+      margin:10px 0 6px 0;
+      font-weight:700;
+      color:var(--sanscorp-dark);
+    }
+
+    /* Form row / groups */
+    .formRow{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:6px;
+    }
+    .group{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      white-space:nowrap;
+    }
+    .group label{ margin:0; }
+    .group select, .group input{ margin:0; }
+
+    input, select, button{
+      padding:6px;
+      font-size:14px;
+      border:1px solid #cfcfcf;
+      border-radius:4px;
+    }
+
+    /* Buttons */
+    button{
+      background:var(--sanscorp-blue);
+      color:#fff;
+      border:none;
+      cursor:pointer;
+      border-radius:4px;
+      padding:6px 10px;
+      font-weight:600;
+      margin-right:6px;
+    }
+    button:hover{ background:var(--sanscorp-accent); }
+    button:active{ transform: translateY(1px); }
+
+    /* Segmented controls */
+    .segmented{
+      display:inline-flex;
+      border:1px solid #cfcfcf;
+      border-radius:10px;
+      overflow:hidden;
+      background:#f5f5f5;
+    }
+    .segBtn{
+      border:0;
+      background:transparent;
+      color:#111;
+      padding:6px 10px;
+      font-weight:700;
+      cursor:pointer;
+      margin:0;
+    }
+    .segBtn.active{
+      background:#111;
+      color:#fff;
+    }
+
+    /* Little pill for Default */
+    .pill{
+      display:inline-block;
+      padding:1px 8px;
+      border-radius:999px;
+      font-size:11px;
+      border:1px solid var(--sanscorp-blue);
+      color:var(--sanscorp-blue);
+      background:#eef6ff;
+      margin-left:6px;
+      vertical-align:middle;
+    }
+
+    .tiny{ font-size:12px; color:#444; }
+    .tinyStrong{ font-size:12px; color:#222; font-weight:700; }
+
+    /* Pit list */
+    #pitList{
+      max-height: 220px;
+      overflow-y: auto;
+      border:1px solid #cfcfcf;
+      padding:8px;
+      background:#fff;
+      border-radius:6px;
+    }
+    #pitList div{ margin-bottom:4px; }
+
+    /* Map + results */
+    #map{
+      height:420px;
+      width:100%;
+      border-top:4px solid var(--sanscorp-blue);
+    }
+    #result{ padding:16px; }
+
+    table{
+      border-collapse:collapse;
+      margin-top:8px;
+      width:100%;
+      max-width:1200px;
+      background:#fff;
+      border:1px solid var(--card-border);
+    }
+    th, td{
+      border:1px solid var(--table-border);
+      padding:6px 8px;
+      text-align:left;
+      font-size:13px;
+    }
+    th{
+      background:var(--sanscorp-dark);
+      color:#fff;
+    }
+    .best-row{
+      background:var(--best);
+      font-weight:700;
+    }
+      .routeReview{
+      margin-top:12px;
+      padding-top:10px;
+      border-top:1px solid #e0e0e0;
+      font-size:12px;
+    }
+
+     .routeReview a{
+      display:inline-block;
+      margin-top:4px;
+      color:var(--sanscorp-blue);
+      font-weight:600;
+      text-decoration:none;
+}
+.routeReview a:hover{
+  text-decoration:underline;
+}
+
+    /* Notes popup */
+    .notesTrigger{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:var(--sanscorp-blue);
+      color:#fff;
+      border:none;
+      padding:6px 10px;
+      border-radius:16px;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:4px;
+    }
+    
+    .notesTrigger:hover{ background:var(--sanscorp-accent); }
+
+    .notesOverlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.35);
+      z-index:999;
+    }
+    .notesPopup{
+      position:absolute;
+      top:84px;
+      right:24px;
+      background:#fff;
+      border-radius:8px;
+      width:420px;
+      max-width:92%;
+      box-shadow:0 10px 30px rgba(0,0,0,0.25);
+      border-left:6px solid var(--sanscorp-blue);
+      padding:14px 16px;
+    }
+    .notesPopup h3{
+      margin:0 0 8px 0;
+      font-size:15px;
+      color:var(--sanscorp-dark);
+    }
+    .notesPopup ul{
+      margin:0;
+      padding-left:18px;
+      font-size:13px;
+    }
+    .notesPopup .tiny{
+      margin-top:8px;
+      font-size:11px;
+      color:#555;
+    }
+
+    .metaBar{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:8px;
+      padding:8px 10px;
+      border:1px solid #dcdcdc;
+      border-radius:8px;
+      background:#fff;
+    }
+    .metaBar .tiny{ margin:0; }
+  </style>
+</head>
+
+<body>
+  <div id="controls">
+    <div class="brandRow">
+      <img src="Sanscorp/Sanscorp Logos_Grey Scorpion.png" alt="Sanscorp" class="brandLogo">
+      <div>
+        <div class="brandTitle">Travel Time Calculator</div>
+        <div class="brandSub">Quoting / dispatch tool — totals include round-trip + truck buffer + optional traffic profile</div>
+      </div>
+    </div>
+
+    <div class="rowWrap">
+      <div class="colGrow">
+        <div class="formRow">
+          <div class="group">
+            <label for="pitSelect"><strong>Focus map on pit (optional):</strong></label>
+            <select id="pitSelect"></select>
+          </div>
+
+          <div class="group">
+            <label for="addressInput"><strong>Delivery Address:</strong></label>
+            <input id="addressInput" type="text" size="40" placeholder="Enter delivery address" />
+          </div>
+
+          <div class="group">
+            <label for="truckType"><strong>Truck type (buffer added for load/unload etc.):</strong></label>
+            <select id="truckType">
+              <option value="tandem">Tandem – 27 min buffer</option>
+              <option value="truckPony">Truck & pony – 35 min buffer</option>
+              <option value="transfer">Truck & transfer – 42 min buffer</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- NEW: Pricing toggles -->
+        <div class="formRow" style="margin-top:4px;">
+          <div class="group">
+            <label class="tinyStrong">Pricing:</label>
+            <div class="segmented" id="pricingTypeToggle" title="Contractor = base rate. Customer = +2.5% charge uplift. Pay never changes.">
+              <button type="button" class="segBtn active" data-pricing="CONTRACTOR">Contractor</button>
+              <button type="button" class="segBtn" data-pricing="CUSTOMER">Customer</button>
+            </div>
+          </div>
+
+          <div class="group">
+            <label class="tinyStrong">Method:</label>
+            <div class="segmented" id="pricingMethodToggle" title="Default: Transfer = Per-tonne; Others = Hourly. Override allowed.">
+              <button type="button" class="segBtn active" data-method="AUTO">Auto</button>
+              <button type="button" class="segBtn" data-method="HOURLY">Hourly</button>
+              <button type="button" class="segBtn" data-method="PER_TONNE">Per-tonne</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="group" style="margin-bottom:4px;">
+          <label><strong>Traffic profile:</strong></label>
+          <label><input type="radio" name="trafficProfile" value="typical" checked> Typical <span class="pill">Default</span></label>
+          <label><input type="radio" name="trafficProfile" value="heavy"> Heavy (8:00 AM)</label>
+          <label><input type="radio" name="trafficProfile" value="light"> Light (10:30 AM)</label>
+        </div>
+
+        <div class="tiny" style="margin-top:4px;">
+          Typical uses Google’s default estimate. Heavy/Light use time-based traffic for the next <strong>weekday</strong> occurrence of that time.
+        </div>
+
+        <div class="sectionTitle">Pits to include in calculation:</div>
+        <div style="margin-bottom:6px;">
+          <button type="button" id="btnAll">All pits</button>
+          <button type="button" id="btnPriority">Priority only</button>
+          <button type="button" id="btnAggregate">Sand / Gravel</button>
+          <button type="button" id="btnSoil">Soils</button>
+          <button type="button" id="btndumpsites">Dumpsites</button>
+        </div>
+
+        <div id="pitList"></div>
+
+        <div style="margin-top:10px;">
+          <button id="calcBtn">Calculate Time (selected pits)</button>
+        </div>
+
+        <div class="metaBar">
+          <p class="tiny" id="pricingMeta">Rates: 2025-11 (base) • Customer uplift: +2.5% • Mins enforced after table Billable (hrs)</p>
+        </div>
+      </div>
+
+      <div class="colSide">
+        <button class="notesTrigger" id="notesBtn">Dispatch / Quoting Notes ⓘ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes popup -->
+<div class="notesOverlay" id="notesOverlay">
+  <div class="notesPopup">
+    <h3>Dispatch / Quoting Notes</h3>
+    <ul>
+      <li><strong>Typical (default):</strong> Use for most quotes and rural deliveries unless a known bottleneck applies.</li>
+      <li><strong>Heavy (8:00 AM):</strong> Use for runs expected to arrive in metro congestion (7–9 AM), especially first run.</li>
+      <li><strong>Light (10:30 AM):</strong> Use for multiple rounds / later turns in the city after AM peak clears.</li>
+      <li><strong>Billing standard:</strong> Use <strong>Quoted (15-min)</strong> time (rounded up) unless an exception is approved.</li>
+      <li><strong>Pricing standard (V8):</strong> Use table <strong>Billable (hrs)</strong> × rate; Customer mins can bump 0.75 → 1.00.</li>
+    </ul>
+
+    <div class="tiny">
+      Heavy/Light usually change city corridors significantly; rural routes often change only slightly.
+    </div>
+
+    <hr style="margin:10px 0">
+
+    <div class="routeReview">
+      <strong>Route review:</strong><br>
+      <a id="mapsLink" href="#" target="_blank" rel="noopener">
+        Open address in Google Maps ↗
+      </a>
+    </div>
+  </div>
+</div>
+  <div id="map"></div>
+  <div id="result"></div>
+
+  <div class="tiny" style="margin:10px 16px; opacity:0.7;">
+    Internal pilot • Version v8 • Not for customer-facing use • Brody Long
+  </div>
+
+  <script>
+    // =====================
+    // V8 PRICING ENGINE
+    // =====================
+
+    // UI state
+    let pricingType = "CONTRACTOR"; // CONTRACTOR | CUSTOMER
+    let pricingMethodMode = "AUTO"; // AUTO | HOURLY | PER_TONNE
+    let lastResultsCache = null;    // store last computed travel rows so toggles can re-render
+
+    // ===== Visibility controls =====
+       const SHOW_MARGIN_COLUMN = false; // set true if you ever want it back
+
+    // Nov 2025 base sheet (contractor base). Customer = +2.5% uplift on CHARGE ONLY.
+    // Mapping: truckType select (tandem/truckPony/transfer) -> equipment key
+    const EQUIPMENT_MAP = {
+      tandem: "TANDEM",
+      truckPony: "TRUCK_PONY",
+      transfer: "TRUCK_TRANSFER"
+    };
+
+    const RATE_SHEETS = [
+      {
+        version: "2025-11",
+        effectiveFrom: "2025-11-01",
+        effectiveTo: "2025-12-31",
+        equipment: {
+          TRUCK_TRANSFER: {
+            chargeHourly: 175.39,
+            payHourly: 162.40,
+            baseTonnes: 38,
+            minHoursContractor: 1.00,
+            minHoursCustomer: 1.00
+          },
+          TANDEM: {
+            chargeHourly: 108.86,
+            payHourly: 100.80,
+            baseTonnes: 13, // only if you ever do tandem per-tonne
+            minHoursContractor: 0.75,
+            minHoursCustomer: 1.00
+          },
+          TRUCK_PONY: {
+            chargeHourly: 134.73,
+            payHourly: 124.75,
+            baseTonnes: null,
+            minHoursContractor: 1.00,
+            minHoursCustomer: 1.00
+          }
+        }
+      }
+    ];
+
+    function roundToCents(n){
+      return Math.round((n + Number.EPSILON) * 100) / 100;
+    }
+    function money(n){
+      if (n === null || n === undefined) return "";
+      return `$${Number(n).toFixed(2)}`;
+    }
+    function isDateInRange(isoDate, fromISO, toISO){
+      return isoDate >= fromISO && isoDate <= toISO;
+    }
+    function jobDateISO(){
+      // You can replace this with a "dispatch date" input later
+      return new Date().toISOString().slice(0,10);
+    }
+    function rateLookup(equipmentKey){
+      const d = jobDateISO();
+      const sheet = RATE_SHEETS.find(s => isDateInRange(d, s.effectiveFrom, s.effectiveTo)) || RATE_SHEETS[0];
+      const rate = sheet.equipment[equipmentKey];
+      if (!rate) throw new Error(`No rate configured for ${equipmentKey} in ${sheet.version}`);
+      return { sheetVersion: sheet.version, rate };
+    }
+    function applyCustomerUplift(contractorChargeHourly){
+      if (pricingType === "CUSTOMER") return roundToCents(contractorChargeHourly * 1.025);
+      return contractorChargeHourly;
+    }
+    function enforceMinHours(billableHoursFromTable, rate){
+      const minH = (pricingType === "CUSTOMER") ? rate.minHoursCustomer : rate.minHoursContractor;
+      return Math.max(Number(billableHoursFromTable), Number(minH));
+    }
+    function defaultMethodForEquipment(equipmentKey){
+      // Your standard: Transfer defaults to Per-tonne; others hourly
+      return equipmentKey === "TRUCK_TRANSFER" ? "PER_TONNE" : "HOURLY";
+    }
+    function resolvedPricingMethod(equipmentKey){
+      if (pricingMethodMode === "AUTO") return defaultMethodForEquipment(equipmentKey);
+      return pricingMethodMode;
+    }
+
+    function priceRow({ equipmentKey, billableHoursFromTable }){
+      const { sheetVersion, rate } = rateLookup(equipmentKey);
+
+      const chargeHourly = applyCustomerUplift(rate.chargeHourly);
+      const payHourly = rate.payHourly;
+
+      const billableHrsUsed = enforceMinHours(billableHoursFromTable, rate);
+      const method = resolvedPricingMethod(equipmentKey);
+
+      if (method === "HOURLY"){
+        const chargeTotal = roundToCents(billableHrsUsed * chargeHourly);
+        const payTotal = roundToCents(billableHrsUsed * payHourly);
+        return {
+          sheetVersion,
+          method,
+          billableHrsUsed,
+          chargeHourly,
+          payHourly,
+          chargeTotal,
+          payTotal,
+          margin: roundToCents(chargeTotal - payTotal),
+          chargePerTonne: null,
+          payPerTonne: null
+        };
+      }
+
+      // PER_TONNE
+      if (!rate.baseTonnes) {
+        return {
+          sheetVersion,
+          method,
+          billableHrsUsed,
+          chargeHourly,
+          payHourly,
+          chargeTotal: null,
+          payTotal: null,
+          margin: null,
+          chargePerTonne: null,
+          payPerTonne: null,
+          error: "Per-tonne not configured for this equipment"
+        };
+      }
+
+      const chargePerTonne = roundToCents((billableHrsUsed * chargeHourly) / rate.baseTonnes);
+      const payPerTonne = roundToCents((billableHrsUsed * payHourly) / rate.baseTonnes);
+      return {
+        sheetVersion,
+        method,
+        billableHrsUsed,
+        chargeHourly,
+        payHourly,
+        chargeTotal: null,
+        payTotal: null,
+        margin: null,
+        chargePerTonne,
+        payPerTonne
+      };
+    }
+    function updateMapsLink() {
+    const addressInput = document.getElementById('addressInput');
+    const mapsLink = document.getElementById('mapsLink');
+
+    if (!addressInput || !mapsLink) return;
+
+    const address = addressInput.value.trim();
+    if (!address) {
+      mapsLink.href = '#';
+      mapsLink.style.pointerEvents = 'none';
+      mapsLink.style.opacity = '0.5';
+      return;
+    }
+
+    const encoded = encodeURIComponent(address);
+    mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encoded}`;
+    mapsLink.style.pointerEvents = 'auto';
+    mapsLink.style.opacity = '1';
+  }
+
+  // Update link when address changes
+  document.getElementById('addressInput')
+    .addEventListener('input', updateMapsLink);
+
+    function updatePricingMeta(){
+      try{
+        const equipmentKey = EQUIPMENT_MAP[document.getElementById("truckType").value] || "TANDEM";
+        const { sheetVersion } = rateLookup(equipmentKey);
+        const method = resolvedPricingMethod(equipmentKey);
+        const meta = document.getElementById("pricingMeta");
+        meta.textContent = `Rates: ${sheetVersion} (contractor base) • Pricing: ${pricingType} • Method: ${method} • Customer uplift: +2.5% (charge only)`;
+      }catch(e){
+        const meta = document.getElementById("pricingMeta");
+        meta.textContent = `Pricing meta error: ${e.message}`;
+      }
+    }
+
+    function rerenderWithPricing(){
+      if (!lastResultsCache) return;
+      const { address, truckType, bufferMinutes, trafficProfile, depLabel, results, best } = lastResultsCache;
+      const equipmentKey = EQUIPMENT_MAP[truckType] || "TANDEM";
+      const method = resolvedPricingMethod(equipmentKey);
+
+      const profileLabel =
+        trafficProfile === 'heavy' ? 'Heavy (8:00 AM)' :
+        trafficProfile === 'light' ? 'Light (10:30 AM)' :
+        'Typical (default)';
+
+      let html = `
+        <h3>Results for: ${address}</h3>
+        <p class="tiny">
+          Truck type: <strong>${truckTypeLabel(truckType)}</strong> — buffer <strong>${bufferMinutes} min</strong><br>
+          Traffic profile: <strong>${profileLabel}</strong>${depLabel}<br>
+          Total = round-trip drive + buffer. Quoted (15-min) rounds up for quoting. Billable (hrs) = quoted time in 0.25 hr steps.<br>
+          <strong>Pricing:</strong> ${pricingType} • <strong>Method:</strong> ${method} • mins enforced after table Billable (hrs).
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Pit</th>
+              <th>Code</th>
+              <th>Material(s)</th>
+              <th>Distance (one-way)</th>
+              <th>One-way time</th>
+              <th>Round-trip (min)</th>
+              <th>Total (min)</th>
+              <th>Total (hrs)</th>
+              <th>Quoted (15-min)</th>
+              <th>Billable (hrs)</th>
+              <th>Billable used</th>
+        ${
+           method === "HOURLY"
+             ? `
+                  <th>Charge</th>
+                 <th>Pay</th>
+                  ${SHOW_MARGIN_COLUMN ? "<th>Margin</th>" : ""}
+              `
+    : `<th>Charge $/t</th><th>Pay $/t</th>`
+}
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      for (const r of results){
+        const isBest = r.pit.id === best.pit.id;
+        const matLabel = r.pit.materials ? r.pit.materials.join(' + ') : r.pit.material;
+
+        const priced = priceRow({ equipmentKey, billableHoursFromTable: r.billableHours });
+
+        html += `
+          <tr class="${isBest ? 'best-row' : ''}">
+            <td>${r.pit.name}${isBest ? ' <span style="color:var(--sanscorp-blue)">★</span>' : ''}</td>
+            <td>${r.pit.code}</td>
+            <td>${matLabel || 'n/a'}</td>
+            <td>${r.distanceText}</td>
+            <td>${r.oneWayText}</td>
+            <td>${r.roundTripMinutes}</td>
+            <td>${r.totalMinutes}</td>
+            <td>${r.totalHours}</td>
+            <td>${r.quotedMinutes}</td>
+            <td>${r.billableHours}</td>
+            <td>${Number(priced.billableHrsUsed).toFixed(2)}</td>
+            ${
+              method === "HOURLY"
+                ? `
+                  <td>${money(priced.chargeTotal)}</td>
+                  <td>${money(priced.payTotal)}</td>
+                  ${SHOW_MARGIN_COLUMN ? `<td>${money(priced.margin)}</td>` : ""}
+
+                `
+                : `
+                  <td>${priced.error ? `<span class="tiny" style="color:#b00020">${priced.error}</span>` : money(priced.chargePerTonne)}</td>
+                  <td>${priced.error ? "" : money(priced.payPerTonne)}</td>
+                `
+            }
+          </tr>
+        `;
+      }
+
+      html += `
+          </tbody>
+        </table>
+        <p class="tiny"><strong>Fastest pit:</strong> ${best.pit.code} – ${best.pit.name}
+        (about ${best.totalMinutes} min total, quoted as ${best.quotedMinutes} min / ${best.billableHours} hrs).</p>
+      `;
+
+      document.getElementById("result").innerHTML = html;
+      updatePricingMeta();
+    }
+
+    // =====================
+    // V7 LOGIC (UNCHANGED) + small cache hook
+    // =====================
+
+    // ===== PIT DATA =====
+    const pits = [
+      { id: 'AGRM', code: 'AGRM', name: 'Agassiz Ready Mix', lat: 49.26034701118287, lng: -121.81348218935932, material: 'aggregate', priority: false },
+      { id: 'ALKP', code: 'ALKP', name: 'Allards-Keystone Pit', lat: 49.18115237838254, lng: -122.3557366189547, material: 'aggregate', priority: false },
+      { id: 'ALPP', code: 'ALPP', name: 'Allards - Pipeline', lat: 49.31110979107478, lng: -122.77343303596174, material: 'aggregate', priority: false },
+      { id: 'ARSG', code: 'ARSG', name: 'Armstrong Sand & Gravel', lat: 49.26109700355657, lng: -121.84168841634995, material: 'aggregate', priority: true },
+      { id: 'AUSM', code: 'AUSM', name: 'Augustine Soil & Mulch Ltd.', lat: 49.244965527447874, lng: -122.72494636524, material: 'soil', priority: false },
+      { id: 'DADP', code: 'DADP', name: 'Davies Pit', lat: 49.210181160585876, lng: -122.30884373169172, material: 'aggregate', priority: true },
+      { id: 'ECAG', code: 'ECAG', name: 'Eco-Agg Concrete Recycling Ltd.', lat: 49.187672647552894, lng: -122.65470456990312, material: 'aggregate', priority: false },
+      { id: 'FVBR', code: 'FVBR', name: 'Fraser - Bradner Rd - Pit 15', lat: 49.02905586244711, lng: -122.4108606925718, material: 'aggregate', priority: false },
+      { id: 'FVCP', code: 'FVCP', name: 'Fraser - Castle Pit', lat: 49.183077344185016, lng: -122.15669227402337, material: 'aggregate', priority: false },
+      { id: 'FVHQ', code: 'FVHQ', name: 'Fraser - Highland Quarry', lat: 49.10120550876069, lng: -122.19018901710247, material: 'aggregate', priority: false },
+      { id: 'FVLQ', code: 'FVLQ', name: 'Fraser - Stave Lake Quarry', lat: 49.24478227286863, lng: -122.25591928855191, material: 'aggregate', priority: false },
+      { id: 'FVSQ', code: 'FVSQ', name: 'Fraser - Sylvester Rd Quarries', lat: 49.18863082912152, lng: -122.23041022494809, material: 'aggregate', priority: true },
+      { id: 'FVVP', code: 'FVVP', name: 'Fraser - Vye Rd', lat: 49.01880458103315, lng: -122.27822475417781, material: 'aggregate', priority: false },
+      { id: 'GASO', code: 'GASO', name: 'Gawley & Son Contracting', lat: 49.188910674367044, lng: -122.65539403541045, material: 'soil', priority: false },
+      { id: 'HTB',  code: 'HT&B', name: 'Hanks Trucking & Bulldozing', lat: 49.2212909038682, lng: -122.71777997534798, material: 'soil', priority: false },
+      { id: 'KHCP', code: 'KHCP', name: 'King Hoe - Shaw / Caswell Pit', lat: 49.18607317099154, lng: -122.35702193241455, material: 'aggregate', priority: false },
+      { id: 'LFBM', code: 'LFBM', name: 'Lafarge - Bear Mountain', lat: 49.20561456153182, lng: -122.31072036123216, material: 'aggregate', priority: true },
+      { id: 'LFCN', code: 'LFCN', name: 'Lafarge - Cannon', lat: 49.19732433216924, lng: -122.32200444268152, material: 'aggregate', priority: false },
+      { id: 'LFCP', code: 'LFCP', name: 'Lafarge - Central Pit', lat: 49.02237805146195, lng: -122.41528431774975, material: 'aggregate', priority: false },
+      { id: 'LFLY', code: 'LFLY', name: 'Lafarge - Leeder Yard', lat: 49.223551284461855, lng: -122.83201509441948, material: 'aggregate', priority: false },
+      { id: 'LFPQ', code: 'LFPQ', name: 'Lafarge - Pitt River Quarries', lat: 49.28297539537314, lng: -122.66343547600584, material: 'aggregate', priority: true },
+      { id: 'LFVA', code: 'LFVA', name: 'Lafarge - Vancouver Ashphalt', lat: 49.20551910068207, lng: -123.07420064405945, material: 'aggregate', priority: false },
+      { id: 'LFWQ', code: 'LFWQ', name: 'Lafarge - Ward Rd Quarry', lat: 49.07314325850463, lng: -122.18545054681415, material: 'aggregate', priority: false },
+      { id: 'LHCR', code: 'LHCR', name: 'Lehigh - Chilliwack', lat: 49.20259871125094, lng: -121.9469387901672, material: 'aggregate', priority: false },
+      { id: 'LHDY', code: 'LHDY', name: 'Lehigh - Delta', lat: 49.127908326528285, lng: -123.05047014320148, material: 'aggregate', priority: false },
+      { id: 'LHGQ', code: 'LHGQ', name: 'Lehigh - Gilley Quarry', lat: 49.32084961551054, lng: -122.67608449604292, material: 'aggregate', priority: false },
+      { id: 'LHLY', code: 'LHLY', name: 'Lehigh - Langley', lat: 49.19043327340221, lng: -122.66336177769949, material: 'aggregate', priority: false },
+      { id: 'LHMY', code: 'LHMY', name: 'Lehigh - Marpole', lat: 49.200963872446614, lng: -123.13424668291908, material: 'aggregate', priority: false },
+      { id: 'LHNY', code: 'LHNY', name: 'Lehigh - North Vancouver', lat: 49.30040829499512, lng: -123.0186290475346, material: 'aggregate', priority: false },
+      { id: 'LHPL', code: 'LHPL', name: 'Lehigh - Pipeline', lat: 49.32135326222276, lng: -122.77260553364825, material: 'aggregate', priority: false },
+      { id: 'LHSY', code: 'LHSY', name: 'Lehigh - Surrey', lat: 49.20905815282391, lng: -122.88609425417091, material: 'aggregate', priority: false },
+      { id: 'LIAG', code: 'LIAG', name: 'Linterra Aggregates', lat: 49.0888154739531, lng: -121.96442828827153, material: 'aggregate', priority: false },
+      { id: 'LIPO', code: 'LIPO', name: 'Linterra Popkum', lat: 49.20345278056392, lng: -121.72636277569276, material: 'aggregate', priority: false },
+      { id: 'ML5L', code: 'ML5L', name: 'Mainland - No 5 Rd.', lat: 49.12135805066392, lng: -123.08901437722491, material: 'aggregate', priority: false },
+      { id: 'ML6Y', code: 'ML6Y', name: 'Mainland - No 6 Rd.', lat: 49.20261355362218, lng: -123.06780336464914, material: 'aggregate', priority: false },
+      { id: 'MLBP', code: 'MLBP', name: 'Mainland - Bradner Pit', lat: 49.02848096780666, lng: -122.4187234621572, material: 'aggregate', priority: false },
+      { id: 'MLCQ', code: 'MLCQ', name: "Mainland - Cox's Landing", lat: 49.13324331569198, lng: -122.17428710175265, material: 'aggregate', priority: false },
+      { id: 'MLJQ', code: 'MLJQ', name: 'Mainland - Jamieson Quarry', lat: 49.07672553950553, lng: -122.1942346612847, material: 'aggregate', priority: false },
+      { id: 'MLLP', code: 'MLLP', name: 'Mainland - LeFeuvre Pit', lat: 49.01296348830888, lng: -122.44450239013995, material: 'aggregate', priority: true },
+      { id: 'MLMQ', code: 'MLMQ', name: 'Mainland - Mclean Quarry', lat: 49.07022661833691, lng: -122.18381055944268, material: 'aggregate', priority: false },
+      { id: 'MLPL', code: 'MLPL', name: 'Mainland - Port Kells Levy', lat: 49.1835284965969, lng: -122.68402361771898, material: 'soil', priority: false },
+      { id: 'MLSL', code: 'MLSL', name: 'Mainland - Surrey Levy', lat: 49.19532874322875, lng: -122.9012292486683, material: 'soil', priority: false },
+      { id: 'SARE', code: 'SARE', name: 'Sardis Explosives', lat: 49.08430471241022, lng: -122.00227965235227, material: 'aggregate', priority: false },
+      { id: 'SPLL', code: 'SPLL', name: 'Sanscorp Yard', lat: 49.17080415710566, lng: -122.51436782231896, materials: ['aggregate','soil'], priority: true },
+      { id: 'SPOP', code: 'SPOP', name: "Sanscorp Owen's Pit", lat: 49.241376209662654, lng: -122.5058524107492, material: 'aggregate', priority: true },
+      { id: 'TUYA', code: 'TUYA', name: 'Tuya Enterprises', lat: 49.3057805618864, lng: -121.65935439453315, material: 'aggregate', priority: false },
+      { id: 'VACD', code: 'VACD', name: 'Valley Carriers/Klassen Landscape Depot', lat: 49.083972109582, lng: -122.31696053870895, material: 'soil', priority: false },
+      { id: 'VACA', code: 'VACA', name: 'Valley Carriers/Klassen - Soils', lat: 49.053709018639715, lng: -122.18439187310838, material: 'soil', priority: false },
+      { id: 'VASC', code: 'VASC', name: 'Vancouver Sand & Gravel - Coquitlam Depot', lat: 49.22343607417699, lng: -122.82646164005433, material: 'aggregate', priority: false },
+      { id: 'VASG', code: 'VASG', name: 'Vancouver Sand & Gravel - Vancouver Depot', lat: 49.22343607417699, lng: -122.82646164005433, material: 'aggregate', priority: false },
+      { id: 'VERA', code: 'VERA', name: 'Veratec Engineered Soils', lat: 49.03550237690477, lng: -122.43849269608515, material: 'soil', priority: false },
+      { id: 'WBAG', code: 'WBAG', name: 'Woodbrook Aggregates ltd', lat: 49.20363521987235, lng: -122.0455360875177, material: 'aggregate', priority: false }
+    ];
+
+    const truckBuffers = { tandem: 27, truckPony: 35, transfer: 42 };
+
+    let map;
+    let distanceService;
+
+    function initMap(){
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 49.217, lng: -122.5 },
+        zoom: 10
+      });
+
+      distanceService = new google.maps.DistanceMatrixService();
+
+      const pitSelect = document.getElementById('pitSelect');
+      const pitListDiv = document.getElementById('pitList');
+
+      pits.forEach((pit, index) => {
+        const option = document.createElement('option');
+        option.value = pit.id;
+        option.textContent = `${pit.code} – ${pit.name}`;
+        pitSelect.appendChild(option);
+
+        const wrapper = document.createElement('div');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = `pitCheck-${pit.id}`;
+        cb.checked = !!pit.priority || pit.code.startsWith('SP');
+
+        const matLabel = pit.materials ? pit.materials.join(' + ') : pit.material;
+        const lbl = document.createElement('label');
+        lbl.setAttribute('for', cb.id);
+        lbl.textContent = ` ${pit.code} – ${pit.name} (${matLabel || 'n/a'})${pit.priority ? ' [priority]' : ''}`;
+
+        wrapper.appendChild(cb);
+        wrapper.appendChild(lbl);
+        pitListDiv.appendChild(wrapper);
+
+        new google.maps.Marker({
+          position: { lat: pit.lat, lng: pit.lng },
+          map: map,
+          title: `${pit.code} – ${pit.name}`
+        });
+
+        if (index === 0) map.setCenter({ lat: pit.lat, lng: pit.lng });
+      });
+
+      pitSelect.addEventListener('change', () => {
+        const pit = pits.find(p => p.id === pitSelect.value);
+        if (pit){ map.setCenter({ lat: pit.lat, lng: pit.lng }); map.setZoom(11); }
+      });
+
+      document.getElementById('btnAll').addEventListener('click', () => setCheckboxes(() => true));
+      document.getElementById('btnPriority').addEventListener('click', () => setCheckboxes(p => !!p.priority));
+      document.getElementById('btnAggregate').addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('aggregate') : p.material === 'aggregate')));
+      document.getElementById('btnSoil').addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('soil') : p.material === 'soil')));
+      document.getElementById('btndumpsites').addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('dumpsites') : p.material === 'dumpsites')));
+
+      document.getElementById('calcBtn').addEventListener('click', onCalculateClick);
+
+      // NEW: toggle handlers
+      bindToggles();
+      document.getElementById("truckType").addEventListener("change", () => {
+        updatePricingMeta();
+        rerenderWithPricing();
+      });
+
+      updatePricingMeta();
+    }
+
+    function bindToggles(){
+      document.addEventListener("click", (e) => {
+        const pBtn = e.target.closest("#pricingTypeToggle .segBtn");
+        if (pBtn){
+          pricingType = pBtn.dataset.pricing;
+          document.querySelectorAll("#pricingTypeToggle .segBtn").forEach(b => b.classList.remove("active"));
+          pBtn.classList.add("active");
+          updatePricingMeta();
+          rerenderWithPricing();
+          return;
+        }
+
+        const mBtn = e.target.closest("#pricingMethodToggle .segBtn");
+        if (mBtn){
+          pricingMethodMode = mBtn.dataset.method;
+          document.querySelectorAll("#pricingMethodToggle .segBtn").forEach(b => b.classList.remove("active"));
+          mBtn.classList.add("active");
+          updatePricingMeta();
+          rerenderWithPricing();
+          return;
+        }
+      });
+    }
+
+    function setCheckboxes(predicate){
+      pits.forEach(pit => {
+        const cb = document.getElementById(`pitCheck-${pit.id}`);
+        if (cb) cb.checked = predicate(pit);
+      });
+    }
+
+    function getSelectedTrafficProfile(){
+      const el = document.querySelector('input[name="trafficProfile"]:checked');
+      return el ? el.value : 'typical';
+    }
+
+    function isWeekend(date){
+      const day = date.getDay();
+      return day === 0 || day === 6;
+    }
+
+    function nextWeekdayOccurrence(hour, minute){
+      const now = new Date();
+      const d = new Date(now);
+      d.setHours(hour, minute, 0, 0);
+
+      if (d <= now) d.setDate(d.getDate() + 1);
+      while (isWeekend(d)) d.setDate(d.getDate() + 1);
+
+      return d;
+    }
+
+    function trafficDrivingOptions(profile){
+      if (profile === 'heavy') return { departureTime: nextWeekdayOccurrence(8, 0) };
+      if (profile === 'light') return { departureTime: nextWeekdayOccurrence(10, 30) };
+      return null;
+    }
+
+    function truckTypeLabel(value){
+      if (value === 'truckPony') return 'Truck & pony';
+      if (value === 'transfer') return 'Truck & transfer';
+      return 'Tandem';
+    }
+
+    function onCalculateClick(){
+      const address = document.getElementById('addressInput').value.trim();
+      const truckType = document.getElementById('truckType').value;
+      const bufferMinutes = truckBuffers[truckType] || 27;
+      const trafficProfile = getSelectedTrafficProfile();
+      const drivingOptions = trafficDrivingOptions(trafficProfile);
+
+      const resultDiv = document.getElementById('result');
+      if (!address){ resultDiv.textContent = 'Please enter a delivery address.'; return; }
+
+      const activePits = pits.filter(pit => {
+        const cb = document.getElementById(`pitCheck-${pit.id}`);
+        return cb && cb.checked;
+      });
+      if (activePits.length === 0){ resultDiv.textContent = 'No pits selected.'; return; }
+
+      const origins = activePits.map(p => new google.maps.LatLng(p.lat, p.lng));
+      resultDiv.textContent = 'Calculating...';
+
+      const request = {
+        origins,
+        destinations: [address],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.METRIC
+      };
+      if (drivingOptions) request.drivingOptions = drivingOptions;
+
+      distanceService.getDistanceMatrix(request, (response, status) => {
+        if (status !== 'OK'){
+          console.error('DistanceMatrixService failed:', status, response);
+          resultDiv.textContent = 'Error getting travel time. Check console.';
+          return;
+        }
+
+        const results = [];
+        for (let i = 0; i < activePits.length; i++){
+          const element = response.rows[i]?.elements?.[0];
+          if (!element || element.status !== 'OK') continue;
+
+          const pit = activePits[i];
+          const oneWaySeconds = element.duration.value;
+          const oneWayText = element.duration.text;
+          const distanceText = element.distance ? element.distance.text : 'N/A';
+
+          const roundTripSeconds = oneWaySeconds * 2;
+          const totalSeconds = roundTripSeconds + bufferMinutes * 60;
+
+          const totalMinutes = Math.round(totalSeconds / 60);
+          const totalHours = (totalMinutes / 60).toFixed(2);
+
+          const quotedMinutes = Math.ceil(totalMinutes / 15) * 15;
+          const billableHours = (quotedMinutes / 60).toFixed(2);
+
+          results.push({
+            pit,
+            oneWayText,
+            distanceText,
+            roundTripMinutes: Math.round(roundTripSeconds / 60),
+            totalMinutes,
+            totalHours,
+            quotedMinutes,
+            billableHours,
+            totalSeconds
+          });
+        }
+
+        if (results.length === 0){ resultDiv.textContent = 'No valid routes found.'; return; }
+
+        let best = results[0];
+        for (const r of results) if (r.totalSeconds < best.totalSeconds) best = r;
+
+        const depLabel = drivingOptions?.departureTime
+          ? ` (next weekday departure: ${drivingOptions.departureTime.toLocaleString()})`
+          : '';
+
+        // Cache + render via V8 pricing renderer
+        lastResultsCache = { address, truckType, bufferMinutes, trafficProfile, depLabel, results, best };
+        rerenderWithPricing();
+      });
+    }
+
+    // Notes popup wiring
+    window.addEventListener('DOMContentLoaded', () => {
+      const notesBtn = document.getElementById('notesBtn');
+      const notesOverlay = document.getElementById('notesOverlay');
+
+      if (notesBtn && notesOverlay){
+        notesBtn.addEventListener('click', () => { notesOverlay.style.display = 'block'; });
+        notesOverlay.addEventListener('click', (e) => {
+          if (e.target === notesOverlay) notesOverlay.style.display = 'none';
+        });
+      }
+    });
+  </script>
+
+  <!-- IMPORTANT: Put your Google Maps API key below -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAirWbZFX7EKBEjPACKk-XPw9i1RNcP9x8&callback=initMap"
+    async
+    defer>
+  </script>
+</body>
+</html>
