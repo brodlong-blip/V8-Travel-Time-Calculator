@@ -759,7 +759,7 @@
       { id: 'ARSG', code: 'ARSG', name: 'Armstrong Sand & Gravel', lat: 49.26109700355657, lng: -121.84168841634995, material: 'aggregate', priority: true },
       { id: 'AUSM', code: 'AUSM', name: 'Augustine Soil & Mulch Ltd.', lat: 49.244965527447874, lng: -122.72494636524, material: 'soil', priority: false },
       { id: 'DADP', code: 'DADP', name: 'Davies Pit', lat: 49.210181160585876, lng: -122.30884373169172, material: 'aggregate', priority: true },
-      { id: 'DRAD', code: 'DRAD', name: 'Hartley - Drake Excavating Ltd.', lat: 49.24958900837953, lng: -122.22900960454488, material: 'dumpsite', priority: false },
+      { id: 'DRAD', code: 'DRAD', name: 'Hartley - Drake Excavating Ltd.', lat: 49.24958900837953, lng: -122.22900960454488, material: 'dumpsites', priority: false },
       { id: 'ECAG', code: 'ECAG', name: 'Eco-Agg Concrete Recycling Ltd.', lat: 49.187672647552894, lng: -122.65470456990312, material: 'aggregate', priority: false },
       { id: 'FVBR', code: 'FVBR', name: 'Fraser - Bradner Rd - Pit 15', lat: 49.02905586244711, lng: -122.4108606925718, material: 'aggregate', priority: false },
       { id: 'FVCP', code: 'FVCP', name: 'Fraser - Castle Pit', lat: 49.183077344185016, lng: -122.15669227402337, material: 'aggregate', priority: false },
@@ -933,9 +933,9 @@
     }
 
     function trafficDrivingOptions(profile) {
-      if (profile === 'heavy') return { departureTime: nextWeekdayOccurrence(8, 0) };
-      if (profile === 'light') return { departureTime: nextWeekdayOccurrence(10, 30) };
-      return null;
+      if (profile === 'heavy') return { departureTime: nextWeekdayOccurrence(8, 0), trafficModel: "bestguess" };
+      if (profile === 'light') return { departureTime: nextWeekdayOccurrence(10, 30), trafficModel: "bestguess" };
+       return null; // Typical
     }
 
     function truckTypeLabel(value) {
@@ -958,31 +958,49 @@
       return `${km.toFixed(1)} km`;
     }
 
-    // Promisified Distance Matrix for ONE origin -> ONE destination
-    function getLegMetrics(originLatLng, destination, drivingOptions) {
-      return new Promise((resolve, reject) => {
-        const request = {
-          origins: [originLatLng],
-          destinations: [destination],
-          travelMode: google.maps.TravelMode.DRIVING,
-          unitSystem: google.maps.UnitSystem.METRIC
-        };
-        if (drivingOptions) request.drivingOptions = drivingOptions;
+     // Promisified Distance Matrix for ONE origin -> ONE destination
+     function getLegMetrics(originLatLng, destination, drivingOptions) {
+       return new Promise((resolve, reject) => {
+         const request = {
+           origins: [originLatLng],
+           destinations: [destination],
+           travelMode: google.maps.TravelMode.DRIVING,
+           unitSystem: google.maps.UnitSystem.METRIC
+         };
+         if (drivingOptions) request.drivingOptions = drivingOptions;
 
-        distanceService.getDistanceMatrix(request, (response, status) => {
-          if (status !== "OK") return reject(new Error(`DistanceMatrix status: ${status}`));
+         distanceService.getDistanceMatrix(request, (response, status) => {
+   if (status !== "OK") return reject(new Error(`DistanceMatrix status: ${status}`));
 
-          const el = response?.rows?.[0]?.elements?.[0];
-          if (!el || el.status !== "OK") {
-            return reject(new Error(`Route status: ${el?.status || "UNKNOWN"}`));
-          }
+   const el = response?.rows?.[0]?.elements?.[0];
+   if (!el || el.status !== "OK") {
+     return reject(new Error(`Route status: ${el?.status || "UNKNOWN"}`));
+   }
 
-          resolve({
-            durationSeconds: el.duration.value,
-            distanceMeters: el.distance ? el.distance.value : 0
-          });
+  // Warn if we asked for traffic but Google didn't return it
+  if (drivingOptions && !el.duration_in_traffic) {
+    console.warn(
+      "⚠️ No duration_in_traffic returned (traffic profile ignored)",
+      {
+        origin: request.origins[0],
+        destination: request.destinations[0],
+        element: el
+      }
+    );
+  }
+
+  // Use traffic duration when available, otherwise fall back
+  const durObj = (drivingOptions && el.duration_in_traffic)
+    ? el.duration_in_traffic
+    : el.duration;
+
+  resolve({
+    durationSeconds: durObj.value,
+    distanceMeters: el.distance.value,
+    usedTraffic: !!(drivingOptions && el.duration_in_traffic)
         });
-      });
+       });
+     });
     }
    // ============================
    // CALCULATE CLICK (split-leg)
