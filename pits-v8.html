@@ -31,7 +31,6 @@
       border-bottom: 4px solid var(--sanscorp-blue);
     }
 
-    /* Brand header */
     .brandRow {
       display: flex;
       align-items: center;
@@ -43,8 +42,7 @@
       height: 44px;
       width: auto;
       display: block;
-      filter:
-        brightness(0) saturate(100%) invert(18%) sepia(5%) saturate(500%) hue-rotate(180deg) brightness(70%) contrast(110%);
+      filter: brightness(0) saturate(100%) invert(18%) sepia(5%) saturate(500%) hue-rotate(180deg) brightness(70%) contrast(110%);
     }
 
     .brandTitle {
@@ -60,7 +58,6 @@
       color: #555;
     }
 
-    /* Layout helpers */
     .rowWrap {
       display: flex;
       flex-wrap: wrap;
@@ -84,7 +81,6 @@
       color: var(--sanscorp-dark);
     }
 
-    /* Form row / groups */
     .formRow {
       display: flex;
       align-items: center;
@@ -118,7 +114,6 @@
       border-radius: 4px;
     }
 
-    /* Buttons */
     button {
       background: var(--sanscorp-blue);
       color: #fff;
@@ -138,7 +133,6 @@
       transform: translateY(1px);
     }
 
-    /* Segmented controls */
     .segmented {
       display: inline-flex;
       border: 1px solid #cfcfcf;
@@ -162,7 +156,6 @@
       color: #fff;
     }
 
-    /* Little pill for Default */
     .pill {
       display: inline-block;
       padding: 1px 8px;
@@ -186,7 +179,11 @@
       font-weight: 700;
     }
 
-    /* Pit list */
+      /* Hide Site Tight toggle (feature still active in code) */
+     .siteTightRow {
+    display: none !important;
+     }
+
     #pitList {
       max-height: 220px;
       overflow-y: auto;
@@ -200,7 +197,6 @@
       margin-bottom: 4px;
     }
 
-    /* Map + results */
     #map {
       height: 420px;
       width: 100%;
@@ -257,7 +253,6 @@
       text-decoration: underline;
     }
 
-    /* Notes popup */
     .notesTrigger {
       display: inline-flex;
       align-items: center;
@@ -331,6 +326,83 @@
     .metaBar .tiny {
       margin: 0;
     }
+   
+    /* --- Rec / Bump (clean + hover reveal) --- */
+   .recCell { line-height: 1.1; }
+
+  .recTop {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* tiny icon */
+.recIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #cfd8e3;
+  background: #f6f8fb;
+  color: #223;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: help;
+  user-select: none;
+}
+
+/* tooltip on the icon */
+.recIconWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.recTip {
+  position: absolute;
+  left: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #111;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+  z-index: 50;
+}
+
+.recIconWrap:hover .recTip { opacity: 1; }
+
+/* reason hidden unless you hover the whole rec cell */
+.recReason {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+  display: none;
+}
+.recCell:hover .recReason { display: block; }
+
+/* checkbox row */
+.recToggleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #333;
+}
+.recToggleRow input { transform: translateY(1px); }
+
+/* subtle base price line when bump is active */
+.moneySubtle { font-size: 11px; color: #777; margin-top: 2px; }
+.moneyStrong { font-weight: 700; }
   </style>
 </head>
 
@@ -340,8 +412,7 @@
       <img src="Sanscorp/Sanscorp Logos_Grey Scorpion.png" alt="Sanscorp" class="brandLogo">
       <div>
         <div class="brandTitle">Travel Time Calculator</div>
-        <div class="brandSub">Quoting / dispatch tool — totals include round-trip + truck buffer + optional traffic
-          profile</div>
+        <div class="brandSub">Quoting / dispatch tool — totals include round-trip + truck buffer + optional traffic profile</div>
       </div>
     </div>
 
@@ -368,12 +439,18 @@
           </div>
         </div>
 
-        <!-- NEW: Pricing toggles -->
+        <div class="group siteTightRow" style="margin-top:6px;">
+          <label class="tinyStrong">
+             <input type="checkbox" id="siteTightToggle">
+             Site tight / Transfer risk (show “bump” recommendation)
+         </label>
+       </div>
+
+        <!-- Pricing toggles -->
         <div class="formRow" style="margin-top:4px;">
           <div class="group">
             <label class="tinyStrong">Pricing:</label>
-            <div class="segmented" id="pricingTypeToggle"
-              title="Contractor = base rate. Customer = +2.5% charge uplift. Pay never changes.">
+            <div class="segmented" id="pricingTypeToggle" title="Contractor = base rate. Customer = +2.5% charge uplift. Pay never changes.">
               <button type="button" class="segBtn active" data-pricing="CONTRACTOR">Contractor</button>
               <button type="button" class="segBtn" data-pricing="CUSTOMER">Customer</button>
             </div>
@@ -381,8 +458,7 @@
 
           <div class="group">
             <label class="tinyStrong">Method:</label>
-            <div class="segmented" id="pricingMethodToggle"
-              title="Default: Transfer = Per-tonne; Others = Hourly. Override allowed.">
+            <div class="segmented" id="pricingMethodToggle" title="Default: Transfer = Per-tonne; Others = Hourly. Override allowed.">
               <button type="button" class="segBtn active" data-method="AUTO">Auto</button>
               <button type="button" class="segBtn" data-method="HOURLY">Hourly</button>
               <button type="button" class="segBtn" data-method="PER_TONNE">Per-tonne</button>
@@ -392,15 +468,13 @@
 
         <div class="group" style="margin-bottom:4px;">
           <label><strong>Traffic profile:</strong></label>
-          <label><input type="radio" name="trafficProfile" value="typical" checked> Typical <span
-              class="pill">Default</span></label>
+          <label><input type="radio" name="trafficProfile" value="typical" checked> Typical <span class="pill">Default</span></label>
           <label><input type="radio" name="trafficProfile" value="heavy"> Heavy (8:00 AM)</label>
           <label><input type="radio" name="trafficProfile" value="light"> Light (10:30 AM)</label>
         </div>
 
         <div class="tiny" style="margin-top:4px;">
-          Typical uses Google’s default estimate. Heavy/Light use time-based traffic for the next
-          <strong>weekday</strong> occurrence of that time.
+          Typical uses Google’s default estimate. Heavy/Light use time-based traffic for the next <strong>weekday</strong> occurrence of that time.
         </div>
 
         <div class="sectionTitle">Pits to include in calculation:</div>
@@ -420,8 +494,7 @@
         </div>
 
         <div class="metaBar">
-          <p class="tiny" id="pricingMeta">Rates: 2025-11 (base) • Customer uplift: +2.5% • Mins enforced after table
-            Billable (hrs)</p>
+          <p class="tiny" id="pricingMeta">Rates: 2025-11 (base) • Customer uplift: +2.5% • Mins enforced after table Billable (hrs)</p>
         </div>
       </div>
 
@@ -436,16 +509,11 @@
     <div class="notesPopup">
       <h3>Dispatch / Quoting Notes</h3>
       <ul>
-        <li><strong>Typical (default):</strong> Use for most quotes and rural deliveries unless a known bottleneck
-          applies.</li>
-        <li><strong>Heavy (8:00 AM):</strong> Use for runs expected to arrive in metro congestion (7–9 AM), especially
-          first run.</li>
-        <li><strong>Light (10:30 AM):</strong> Use for multiple rounds / later turns in the city after AM peak clears.
-        </li>
-        <li><strong>Billing standard:</strong> Use <strong>Quoted (15-min)</strong> time (rounded up) unless an
-          exception is approved.</li>
-        <li><strong>Pricing standard (V8):</strong> Use table <strong>Billable (hrs)</strong> × rate; Customer mins can
-          bump 0.75 → 1.00.</li>
+        <li><strong>Typical (default):</strong> Use for most quotes and rural deliveries unless a known bottleneck applies.</li>
+        <li><strong>Heavy (8:00 AM):</strong> Use for runs expected to arrive in metro congestion (7–9 AM), especially first run.</li>
+        <li><strong>Light (10:30 AM):</strong> Use for multiple rounds / later turns in the city after AM peak clears.</li>
+        <li><strong>Billing standard:</strong> Use <strong>Quoted (15-min)</strong> time (rounded up) unless an exception is approved.</li>
+        <li><strong>Pricing standard (V8):</strong> Use table <strong>Billable (hrs)</strong> × rate; Customer mins can bump 0.75 → 1.00.</li>
       </ul>
 
       <div class="tiny">
@@ -462,6 +530,7 @@
       </div>
     </div>
   </div>
+
   <div id="map"></div>
   <div id="result"></div>
 
@@ -469,290 +538,227 @@
     Internal pilot • Version v8 • Not for customer-facing use • Brody Long
   </div>
 
-  <script>
-    // =====================
-    // V8 PRICING ENGINE
-    // =====================
+ <script>
+  // =====================
+  // V8 PRICING ENGINE + ROUTING
+  // =====================
 
-    // UI state
-    let pricingType = "CONTRACTOR"; // CONTRACTOR | CUSTOMER
-    let pricingMethodMode = "AUTO"; // AUTO | HOURLY | PER_TONNE
-    let lastResultsCache = null;    // store last computed travel rows so toggles can re-render
+  // UI state
+  let pricingType = "CONTRACTOR";   // CONTRACTOR | CUSTOMER
+  let pricingMethodMode = "AUTO";   // AUTO | HOURLY | PER_TONNE
+  let lastResultsCache = null;      // store last computed travel rows so toggles can re-render
+  let bumpSelections = {}; // { [pitId]: true/false }
 
-    // ===== Visibility controls =====
-    const SHOW_MARGIN_COLUMN = false; // set true if you ever want it back
+  // Address selection state (Places Autocomplete)
+  let deliveryLatLng = null;              // google.maps.LatLng | null
+  let deliveryPickedFromDropdown = false; // true only if they selected a place
 
-    // Nov 2025 base sheet (contractor base). Customer = +2.5% uplift on CHARGE ONLY.
-    // Mapping: truckType select (tandem/truckPony/transfer) -> equipment key
-    const EQUIPMENT_MAP = {
-      tandem: "TANDEM",
-      truckPony: "TRUCK_PONY",
-      transfer: "TRUCK_TRANSFER"
-    };
+  // Site tight toggle
+  let siteTight = false;
 
-    const RATE_SHEETS = [
-      {
-        version: "2025-11",
-        effectiveFrom: "2025-11-01",
-        effectiveTo: "2025-12-31",
-        equipment: {
-          TRUCK_TRANSFER: {
-            chargeHourly: 175.39,
-            payHourly: 162.40,
-            baseTonnes: 38,
-            minHoursContractor: 1.00,
-            minHoursCustomer: 1.00
-          },
-          TANDEM: {
-            chargeHourly: 108.86,
-            payHourly: 100.80,
-            baseTonnes: 13, // only if you ever do tandem per-tonne
-            minHoursContractor: 0.75,
-            minHoursCustomer: 1.00
-          },
-          TRUCK_PONY: {
-            chargeHourly: 134.73,
-            payHourly: 124.75,
-            baseTonnes: null,
-            minHoursContractor: 1.00,
-            minHoursCustomer: 1.00
-          }
-        }
+  // ===== Visibility controls =====
+  const SHOW_MARGIN_COLUMN = false;
+
+  // Bump settings
+  const BUMP_WITHIN_MINUTES = 3;
+
+  // ============================
+  // DYNAMIC BUFFER PROFILES
+  // ============================
+
+const BUFFER_PROFILES = {
+  tandem: [
+    { maxHours: 2.0, buffer: 27 },
+    { maxHours: 2.75, buffer: 32 },
+    { maxHours: 3.5, buffer: 38 }
+  ],
+
+  truckPony: [
+    { maxHours: 2.0, buffer: 35 },
+    { maxHours: 2.75, buffer: 41 },
+    { maxHours: 3.5, buffer: 47 }
+  ],
+
+  transfer: [
+    { maxHours: 2.0, buffer: 45 },
+    { maxHours: 2.75, buffer: 52 },
+    { maxHours: 3.5, buffer: 60 }
+  ]
+};
+
+  const EQUIPMENT_MAP = {
+    tandem: "TANDEM",
+    truckPony: "TRUCK_PONY",
+    transfer: "TRUCK_TRANSFER"
+  };
+
+  const RATE_SHEETS = [
+    {
+      version: "2025-11",
+      effectiveFrom: "2025-11-01",
+      effectiveTo: "2025-12-31",
+      equipment: {
+        TRUCK_TRANSFER: { chargeHourly: 175.39, payHourly: 162.40, baseTonnes: 38, minHoursContractor: 1.00, minHoursCustomer: 1.00 },
+        TANDEM:         { chargeHourly: 108.86, payHourly: 100.80, baseTonnes: 13, minHoursContractor: 0.75, minHoursCustomer: 1.00 },
+        TRUCK_PONY:     { chargeHourly: 134.73, payHourly: 124.75, baseTonnes: null, minHoursContractor: 1.00, minHoursCustomer: 1.00 }
       }
-    ];
+    }
+  ];
 
-    function roundToCents(n) {
-      return Math.round((n + Number.EPSILON) * 100) / 100;
-    }
-    function money(n) {
-      if (n === null || n === undefined) return "";
-      return `$${Number(n).toFixed(2)}`;
-    }
-    function isDateInRange(isoDate, fromISO, toISO) {
-      return isoDate >= fromISO && isoDate <= toISO;
-    }
-    function jobDateISO() {
-      // You can replace this with a "dispatch date" input later
-      return new Date().toISOString().slice(0, 10);
-    }
-    function rateLookup(equipmentKey) {
-      const d = jobDateISO();
-      const sheet = RATE_SHEETS.find(s => isDateInRange(d, s.effectiveFrom, s.effectiveTo)) || RATE_SHEETS[0];
-      const rate = sheet.equipment[equipmentKey];
-      if (!rate) throw new Error(`No rate configured for ${equipmentKey} in ${sheet.version}`);
-      return { sheetVersion: sheet.version, rate };
-    }
-    function applyCustomerUplift(contractorChargeHourly) {
-      if (pricingType === "CUSTOMER") return roundToCents(contractorChargeHourly * 1.025);
-      return contractorChargeHourly;
-    }
-    function enforceMinHours(billableHoursFromTable, rate) {
-      const minH = (pricingType === "CUSTOMER") ? rate.minHoursCustomer : rate.minHoursContractor;
-      return Math.max(Number(billableHoursFromTable), Number(minH));
-    }
-    function defaultMethodForEquipment(equipmentKey) {
-      // Your standard: Transfer defaults to Per-tonne; others hourly
-      return equipmentKey === "TRUCK_TRANSFER" ? "PER_TONNE" : "HOURLY";
-    }
-    function resolvedPricingMethod(equipmentKey) {
-      if (pricingMethodMode === "AUTO") return defaultMethodForEquipment(equipmentKey);
-      return pricingMethodMode;
-    }
+  function roundToCents(n) { return Math.round((n + Number.EPSILON) * 100) / 100; }
+  function money(n) { if (n === null || n === undefined) return ""; return `$${Number(n).toFixed(2)}`; }
+  function isDateInRange(isoDate, fromISO, toISO) { return isoDate >= fromISO && isoDate <= toISO; }
+  function jobDateISO() { return new Date().toISOString().slice(0, 10); }
 
-    function priceRow({ equipmentKey, billableHoursFromTable }) {
-      const { sheetVersion, rate } = rateLookup(equipmentKey);
+  function rateLookup(equipmentKey) {
+    const d = jobDateISO();
+    const sheet = RATE_SHEETS.find(s => isDateInRange(d, s.effectiveFrom, s.effectiveTo)) || RATE_SHEETS[0];
+    const rate = sheet.equipment[equipmentKey];
+    if (!rate) throw new Error(`No rate configured for ${equipmentKey} in ${sheet.version}`);
+    return { sheetVersion: sheet.version, rate };
+  }
 
-      const chargeHourly = applyCustomerUplift(rate.chargeHourly);
-      const payHourly = rate.payHourly;
+  function applyCustomerUplift(contractorChargeHourly) {
+    if (pricingType === "CUSTOMER") return roundToCents(contractorChargeHourly * 1.025);
+    return contractorChargeHourly;
+  }
 
-      const billableHrsUsed = enforceMinHours(billableHoursFromTable, rate);
-      const method = resolvedPricingMethod(equipmentKey);
+  function enforceMinHours(billableHoursFromTable, rate) {
+    const minH = (pricingType === "CUSTOMER") ? rate.minHoursCustomer : rate.minHoursContractor;
+    return Math.max(Number(billableHoursFromTable), Number(minH));
+  }
 
-      if (method === "HOURLY") {
-        const chargeTotal = roundToCents(billableHrsUsed * chargeHourly);
-        const payTotal = roundToCents(billableHrsUsed * payHourly);
-        return {
-          sheetVersion,
-          method,
-          billableHrsUsed,
-          chargeHourly,
-          payHourly,
-          chargeTotal,
-          payTotal,
-          margin: roundToCents(chargeTotal - payTotal),
-          chargePerTonne: null,
-          payPerTonne: null
-        };
-      }
+  function defaultMethodForEquipment(equipmentKey) {
+    return equipmentKey === "TRUCK_TRANSFER" ? "PER_TONNE" : "HOURLY";
+  }
 
-      // PER_TONNE
-      if (!rate.baseTonnes) {
-        return {
-          sheetVersion,
-          method,
-          billableHrsUsed,
-          chargeHourly,
-          payHourly,
-          chargeTotal: null,
-          payTotal: null,
-          margin: null,
-          chargePerTonne: null,
-          payPerTonne: null,
-          error: "Per-tonne not configured for this equipment"
-        };
-      }
+  function resolvedPricingMethod(equipmentKey) {
+    return pricingMethodMode === "AUTO" ? defaultMethodForEquipment(equipmentKey) : pricingMethodMode;
+  }
 
-      const chargePerTonne = roundToCents((billableHrsUsed * chargeHourly) / rate.baseTonnes);
-      const payPerTonne = roundToCents((billableHrsUsed * payHourly) / rate.baseTonnes);
+  function priceRow({ equipmentKey, billableHoursFromTable }) {
+    const { sheetVersion, rate } = rateLookup(equipmentKey);
+    const chargeHourly = applyCustomerUplift(rate.chargeHourly);
+    const payHourly = rate.payHourly;
+
+    const billableHrsUsed = enforceMinHours(billableHoursFromTable, rate);
+    const method = resolvedPricingMethod(equipmentKey);
+
+    if (method === "HOURLY") {
+      const chargeTotal = roundToCents(billableHrsUsed * chargeHourly);
+      const payTotal = roundToCents(billableHrsUsed * payHourly);
       return {
-        sheetVersion,
-        method,
-        billableHrsUsed,
-        chargeHourly,
-        payHourly,
-        chargeTotal: null,
-        payTotal: null,
-        margin: null,
-        chargePerTonne,
-        payPerTonne
+        sheetVersion, method, billableHrsUsed,
+        chargeHourly, payHourly,
+        chargeTotal, payTotal,
+        margin: roundToCents(chargeTotal - payTotal),
+        chargePerTonne: null, payPerTonne: null
       };
     }
-    function updateMapsLink() {
-      const addressInput = document.getElementById('addressInput');
-      const mapsLink = document.getElementById('mapsLink');
 
-      if (!addressInput || !mapsLink) return;
-
-      const address = addressInput.value.trim();
-      if (!address) {
-        mapsLink.href = '#';
-        mapsLink.style.pointerEvents = 'none';
-        mapsLink.style.opacity = '0.5';
-        return;
-      }
-
-      const encoded = encodeURIComponent(address);
-      mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encoded}`;
-      mapsLink.style.pointerEvents = 'auto';
-      mapsLink.style.opacity = '1';
+    // PER_TONNE
+    if (!rate.baseTonnes) {
+      return {
+        sheetVersion, method, billableHrsUsed,
+        chargeHourly, payHourly,
+        chargeTotal: null, payTotal: null,
+        margin: null,
+        chargePerTonne: null, payPerTonne: null,
+        error: "Per-tonne not configured for this equipment"
+      };
     }
 
-    // Update link when address changes
-    document.getElementById('addressInput')
-      .addEventListener('input', updateMapsLink);
+    const chargePerTonne = roundToCents((billableHrsUsed * chargeHourly) / rate.baseTonnes);
+    const payPerTonne = roundToCents((billableHrsUsed * payHourly) / rate.baseTonnes);
 
-    function updatePricingMeta() {
-      try {
-        const equipmentKey = EQUIPMENT_MAP[document.getElementById("truckType").value] || "TANDEM";
-        const { sheetVersion } = rateLookup(equipmentKey);
-        const method = resolvedPricingMethod(equipmentKey);
-        const meta = document.getElementById("pricingMeta");
-        meta.textContent = `Rates: ${sheetVersion} (contractor base) • Pricing: ${pricingType} • Method: ${method} • Customer uplift: +2.5% (charge only)`;
-      } catch (e) {
-        const meta = document.getElementById("pricingMeta");
-        meta.textContent = `Pricing meta error: ${e.message}`;
-      }
+    return {
+      sheetVersion, method, billableHrsUsed,
+      chargeHourly, payHourly,
+      chargeTotal: null, payTotal: null,
+      margin: null,
+      chargePerTonne, payPerTonne
+    };
+  }
+
+  function updateMapsLink() {
+    const addressInput = document.getElementById('addressInput');
+    const mapsLink = document.getElementById('mapsLink');
+    if (!addressInput || !mapsLink) return;
+
+    const address = addressInput.value.trim();
+    if (!address) {
+      mapsLink.href = '#';
+      mapsLink.style.pointerEvents = 'none';
+      mapsLink.style.opacity = '0.5';
+      return;
     }
+    mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    mapsLink.style.pointerEvents = 'auto';
+    mapsLink.style.opacity = '1';
+  }
 
-    function rerenderWithPricing() {
-      if (!lastResultsCache) return;
-      const { address, truckType, bufferMinutes, trafficProfile, depLabel, results, best } = lastResultsCache;
-      const equipmentKey = EQUIPMENT_MAP[truckType] || "TANDEM";
+  function updatePricingMeta() {
+    try {
+      const equipmentKey = EQUIPMENT_MAP[document.getElementById("truckType").value] || "TANDEM";
+      const { sheetVersion } = rateLookup(equipmentKey);
       const method = resolvedPricingMethod(equipmentKey);
-
-      const profileLabel =
-        trafficProfile === 'heavy' ? 'Heavy (8:00 AM)' :
-          trafficProfile === 'light' ? 'Light (10:30 AM)' :
-            'Typical (default)';
-
-      let html = `
-        <h3>Results for: ${address}</h3>
-        <p class="tiny">
-          Truck type: <strong>${truckTypeLabel(truckType)}</strong> — buffer <strong>${bufferMinutes} min</strong><br>
-          Traffic profile: <strong>${profileLabel}</strong>${depLabel}<br>
-          Total = round-trip drive + buffer. Quoted (15-min) rounds up for quoting. Billable (hrs) = quoted time in 0.25 hr steps.<br>
-          <strong>Pricing:</strong> ${pricingType} • <strong>Method:</strong> ${method} • mins enforced after table Billable (hrs).
-        </p>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Pit</th>
-              <th>Code</th>
-              <th>Material(s)</th>
-              <th>Distance (one-way)</th>
-              <th>One-way time</th>
-              <th>Round-trip (min)</th>
-              <th>Total (min)</th>
-              <th>Total (hrs)</th>
-              <th>Quoted (15-min)</th>
-              <th>Billable (hrs)</th>
-              <th>Billable used</th>
-        ${method === "HOURLY"
-          ? `
-                  <th>Charge</th>
-                 <th>Pay</th>
-                  ${SHOW_MARGIN_COLUMN ? "<th>Margin</th>" : ""}
-              `
-          : `<th>Charge $/t</th><th>Pay $/t</th>`
-        }
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      for (const r of results) {
-        const isBest = r.pit.id === best.pit.id;
-        const matLabel = r.pit.materials ? r.pit.materials.join(' + ') : r.pit.material;
-
-        const priced = priceRow({ equipmentKey, billableHoursFromTable: r.billableHours });
-
-        html += `
-          <tr class="${isBest ? 'best-row' : ''}">
-            <td>${r.pit.name}${isBest ? ' <span style="color:var(--sanscorp-blue)">★</span>' : ''}</td>
-            <td>${r.pit.code}</td>
-            <td>${matLabel || 'n/a'}</td>
-            <td>${r.distanceText}</td>
-            <td>${r.oneWayText}</td>
-            <td>${r.roundTripMinutes}</td>
-            <td>${r.totalMinutes}</td>
-            <td>${r.totalHours}</td>
-            <td>${r.quotedMinutes}</td>
-            <td>${r.billableHours}</td>
-            <td>${Number(priced.billableHrsUsed).toFixed(2)}</td>
-            ${method === "HOURLY"
-            ? `
-                  <td>${money(priced.chargeTotal)}</td>
-                  <td>${money(priced.payTotal)}</td>
-                  ${SHOW_MARGIN_COLUMN ? `<td>${money(priced.margin)}</td>` : ""}
-
-                `
-            : `
-                  <td>${priced.error ? `<span class="tiny" style="color:#b00020">${priced.error}</span>` : money(priced.chargePerTonne)}</td>
-                  <td>${priced.error ? "" : money(priced.payPerTonne)}</td>
-                `
-          }
-          </tr>
-        `;
-      }
-
-      html += `
-          </tbody>
-        </table>
-        <p class="tiny"><strong>Fastest pit:</strong> ${best.pit.code} – ${best.pit.name}
-        (about ${best.totalMinutes} min total, quoted as ${best.quotedMinutes} min / ${best.billableHours} hrs).</p>
-      `;
-
-      document.getElementById("result").innerHTML = html;
-      updatePricingMeta();
+      document.getElementById("pricingMeta").textContent =
+        `Rates: ${sheetVersion} (contractor base) • Pricing: ${pricingType} • Method: ${method} • Customer uplift: +2.5% (charge only)`;
+    } catch (e) {
+      document.getElementById("pricingMeta").textContent = `Pricing meta error: ${e.message}`;
     }
+  }
 
-    // =====================
-    // V7 LOGIC (UNCHANGED) + small cache hook
-    // =====================
+  // ============================
+  // BUMP + DYNAMIC BUFFER
+  // ============================
 
-    // ===== PIT DATA =====
-    const pits = [
+  function computeBumpRecommendation(totalMinutes, quotedMinutes, billableHours) {
+    const nearBoundary = totalMinutes >= (quotedMinutes - BUMP_WITHIN_MINUTES);
+    const shouldRecommend = nearBoundary || siteTight;
+    if (!shouldRecommend) return null;
+
+    const recQuotedMinutes = quotedMinutes + 15;
+    const recBillableHours = (Number(billableHours) + 0.25).toFixed(2);
+
+    const reason = siteTight
+      ? "Site tight / transfer risk"
+      : `Within ${BUMP_WITHIN_MINUTES} min of ${quotedMinutes} min boundary`;
+
+    return { recQuotedMinutes, recBillableHours, reason };
+  }
+
+  function getDynamicBufferMinutes(truckType, roundTripDriveMinutes) {
+
+  const rtHours = roundTripDriveMinutes / 60;
+  const profile = BUFFER_PROFILES[truckType];
+
+  if (!profile) return 30;
+
+  for (const band of profile) {
+    if (rtHours <= band.maxHours) {
+      return band.buffer;
+    }
+  }
+
+  return profile[profile.length - 1].buffer;
+}
+
+  function isWestOfSanscorp(latLng) {
+    // Sanscorp yard lng ~ -122.514 — “west” is more negative
+    const SANSCORP_LNG = -122.51436782231896;
+    return latLng && typeof latLng.lng === "function" && latLng.lng() < SANSCORP_LNG;
+  }
+
+  // =====================
+  // PIT DATA
+  // =====================
+  // ===== PITS LIST =====
+  // Paste your existing:
+  // const pits = [ ... ];
+  // right here (UNCHANGED).
+  // =====================
+  const pits = [
       { id: 'AGRM', code: 'AGRM', name: 'Agassiz Ready Mix', lat: 49.26034701118287, lng: -121.81348218935932, material: 'aggregate', priority: false },
       { id: 'ALKP', code: 'ALKP', name: 'Allards-Keystone Pit', lat: 49.18115237838254, lng: -122.3557366189547, material: 'aggregate', priority: false },
       { id: 'ALPP', code: 'ALPP', name: 'Allards - Pipeline', lat: 49.31110979107478, lng: -122.77343303596174, material: 'aggregate', priority: false },
@@ -766,7 +772,7 @@
       { id: 'FVCP', code: 'FVCP', name: 'Fraser - Castle Pit', lat: 49.183077344185016, lng: -122.15669227402337, material: 'aggregate', priority: false },
       { id: 'FVHQ', code: 'FVHQ', name: 'Fraser - Highland Quarry', lat: 49.10120550876069, lng: -122.19018901710247, truckAccess: { lat: 49.06296907929777, lng: -122.17497977908025 }, material: 'aggregate', priority: false },
       { id: 'FVLQ', code: 'FVLQ', name: 'Fraser - Stave Lake Quarry', lat: 49.24478227286863, lng: -122.25591928855191, material: 'aggregate', priority: false },
-      { id: 'FVSQ', code: 'FVSQ', name: 'Fraser - Sylvester Rd Quarries', lat: 49.18863082912152, lng: -122.23041022494809,truckAccess: { lat: 49.156226617558666, lng: -122.21039047872388 }, material: 'aggregate', priority: true },
+      { id: 'FVSQ', code: 'FVSQ', name: 'Fraser - Sylvester Rd Quarries', lat: 49.18863082912152, lng: -122.23041022494809, truckAccess: { lat: 49.156226617558666, lng: -122.21039047872388 }, material: 'aggregate', priority: true },
       { id: 'FVVP', code: 'FVVP', name: 'Fraser - Vye Rd', lat: 49.01880458103315, lng: -122.27822475417781, material: 'aggregate', priority: false },
       { id: 'GASO', code: 'GASO', name: 'Gawley & Son Contracting', lat: 49.188910674367044, lng: -122.65539403541045, material: 'soil', priority: false },
       { id: 'HTB', code: 'HT&B', name: 'Hanks Trucking & Bulldozing', lat: 49.2212909038682, lng: -122.71777997534798, material: 'soil', priority: false },
@@ -777,7 +783,7 @@
       { id: 'LFLY', code: 'LFLY', name: 'Lafarge - Leeder Yard', lat: 49.223551284461855, lng: -122.83201509441948, material: 'aggregate', priority: false },
       { id: 'LFPQ', code: 'LFPQ', name: 'Lafarge - Pitt River Quarries', lat: 49.28297539537314, lng: -122.66343547600584, material: 'aggregate', priority: true },
       { id: 'LFVA', code: 'LFVA', name: 'Lafarge - Vancouver Ashphalt', lat: 49.20551910068207, lng: -123.07420064405945, material: 'aggregate', priority: false },
-      { id: 'LFWQ', code: 'LFWQ', name: 'Lafarge - Ward Rd Quarry', lat: 49.07314325850463, lng: -122.18545054681415,truckAccess: { lat: 49.06296907929777, lng: -122.17497977908025 },material: 'aggregate', priority: false },
+      { id: 'LFWQ', code: 'LFWQ', name: 'Lafarge - Ward Rd Quarry', lat: 49.07314325850463, lng: -122.18545054681415, truckAccess: { lat: 49.06296907929777, lng: -122.17497977908025 }, material: 'aggregate', priority: false },
       { id: 'LHCR', code: 'LHCR', name: 'Lehigh - Chilliwack', lat: 49.20259871125094, lng: -121.9469387901672, material: 'aggregate', priority: false },
       { id: 'LHDY', code: 'LHDY', name: 'Lehigh - Delta', lat: 49.127908326528285, lng: -123.05047014320148, material: 'aggregate', priority: false },
       { id: 'LHGQ', code: 'LHGQ', name: 'Lehigh - Gilley Quarry', lat: 49.32084961551054, lng: -122.67608449604292, material: 'aggregate', priority: false },
@@ -797,9 +803,26 @@
       { id: 'MLMQ', code: 'MLMQ', name: 'Mainland - Mclean Quarry', lat: 49.07022661833691, lng: -122.18381055944268, truckAccess: { lat: 49.06296907929777, lng: -122.17497977908025 }, material: 'aggregate', priority: false },
       { id: 'MLPL', code: 'MLPL', name: 'Mainland - Port Kells Levy', lat: 49.1835284965969, lng: -122.68402361771898, material: 'aggregate', priority: false },
       { id: 'MLSL', code: 'MLSL', name: 'Mainland - Surrey Levy', lat: 49.19532874322875, lng: -122.9012292486683, material: 'aggregate', priority: false },
-      { id: 'MLNY', code: 'MLNY', name: 'Mainland - New West Yard', lat: 49.22383085781438, lng: -122.88620834376063,truckAccess: { lat: 49.22985102307524, lng: -122.87884589422188 }, material: 'aggregate', priority: false },
+      { id: 'MLNY', code: 'MLNY', name: 'Mainland - New West Yard', lat: 49.22383085781438, lng: -122.88620834376063, truckAccess: { lat: 49.22985102307524, lng: -122.87884589422188 }, material: 'aggregate', priority: false },
       { id: 'SARE', code: 'SARE', name: 'Sardis Explosives', lat: 49.08126393185766, lng: -122.0051762465437, material: 'aggregate', priority: false },
-      { id: 'SPLL', code: 'SPLL', name: 'Sanscorp Yard', lat: 49.17080415710566, lng: -122.51436782231896,truckAccess: { lat: 49.17195888267003, lng: -122.4870594762052 }, materials: ['aggregate', 'soil'], priority: true },
+
+      // ✅ SPLL UPDATED (real yard pin + embedded "yard rules" coords)
+      {
+        id: 'SPLL',
+        code: 'SPLL',
+        name: 'Sanscorp Yard (25450 Lougheed Hwy)',
+        lat: 49.17253295182596,
+        lng: -122.51417724704207,
+        specialRouting: {
+          yard:       { lat: 49.17253295182596,  lng: -122.51417724704207 },
+          exitE:      { lat: 49.172093756475164, lng: -122.48705001908007 },
+          turnaround: { lat: 49.171714048698696, lng: -122.48839951886538 },
+          entryW:     { lat: 49.1831630471025,   lng: -122.55599154854812 }
+        },
+        materials: ['aggregate', 'soil'],
+        priority: true
+      },
+
       { id: 'SPOP', code: 'SPOP', name: "Sanscorp Owen's Pit", lat: 49.241376209662654, lng: -122.5058524107492, material: 'aggregate', priority: true },
       { id: 'TUYA', code: 'TUYA', name: 'Tuya Enterprises', lat: 49.3057805618864, lng: -121.65935439453315, material: 'aggregate', priority: false },
       { id: 'VACD', code: 'VACD', name: 'Valley Carriers/Klassen Landscape Depot', lat: 49.083972109582, lng: -122.31696053870895, material: 'soil', priority: false },
@@ -811,312 +834,617 @@
       { id: 'WBAG', code: 'WBAG', name: 'Woodbrook Aggregates ltd', lat: 49.20363521987235, lng: -122.0455360875177, material: 'aggregate', priority: false }
     ];
 
-    const truckBuffers = { tandem: 27, truckPony: 35, transfer: 42 };
+  // =====================
+  // MAPS + ROUTING
+  // =====================
+  let map;
+  let distanceService;
 
-    let map;
-    let distanceService;
-
-    function initMap() {
-      map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 49.217, lng: -122.5 },
-        zoom: 10
-      });
-
-      distanceService = new google.maps.DistanceMatrixService();
-
-      const pitSelect = document.getElementById('pitSelect');
-      const pitListDiv = document.getElementById('pitList');
-
-      pits.forEach((pit, index) => {
-        const option = document.createElement('option');
-        option.value = pit.id;
-        option.textContent = `${pit.code} – ${pit.name}`;
-        pitSelect.appendChild(option);
-
-        const wrapper = document.createElement('div');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.id = `pitCheck-${pit.id}`;
-        cb.checked = !!pit.priority || pit.code.startsWith('SP');
-
-        const matLabel = pit.materials ? pit.materials.join(' + ') : pit.material;
-        const lbl = document.createElement('label');
-        lbl.setAttribute('for', cb.id);
-        lbl.textContent = ` ${pit.code} – ${pit.name} (${matLabel || 'n/a'})${pit.priority ? ' [priority]' : ''}`;
-
-        wrapper.appendChild(cb);
-        wrapper.appendChild(lbl);
-        pitListDiv.appendChild(wrapper);
-
-        new google.maps.Marker({
-          position: { lat: pit.lat, lng: pit.lng },
-          map: map,
-          title: `${pit.code} – ${pit.name}`
-        });
-
-        if (index === 0) map.setCenter({ lat: pit.lat, lng: pit.lng });
-      });
-
-      pitSelect.addEventListener('change', () => {
-        const pit = pits.find(p => p.id === pitSelect.value);
-        if (pit) { map.setCenter({ lat: pit.lat, lng: pit.lng }); map.setZoom(11); }
-      });
-
-      document.getElementById('btnAll').addEventListener('click', () => setCheckboxes(() => true));
-      document.getElementById('btnPriority').addEventListener('click', () => setCheckboxes(p => !!p.priority));
-      document.getElementById('btnAggregate').addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('aggregate') : p.material === 'aggregate')));
-      document.getElementById('btnSoil').addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('soil') : p.material === 'soil')));
-      document.getElementById('btndumpsites').addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('dumpsites') : p.material === 'dumpsites')));
-      document.getElementById("btnClearAllPits")?.addEventListener("click", () => {
-        setCheckboxes(() => false); // uncheck all pits');
-      });
-      document.getElementById('calcBtn').addEventListener('click', onCalculateClick);
-
-      // NEW: toggle handlers
-      bindToggles();
-      document.getElementById("truckType").addEventListener("change", () => {
+  function bindToggles() {
+    document.addEventListener("click", (e) => {
+      const pBtn = e.target.closest("#pricingTypeToggle .segBtn");
+      if (pBtn) {
+        pricingType = pBtn.dataset.pricing;
+        document.querySelectorAll("#pricingTypeToggle .segBtn").forEach(b => b.classList.remove("active"));
+        pBtn.classList.add("active");
         updatePricingMeta();
         rerenderWithPricing();
-      });
-
-      updatePricingMeta();
-    }
-
-    function bindToggles() {
-      document.addEventListener("click", (e) => {
-        const pBtn = e.target.closest("#pricingTypeToggle .segBtn");
-        if (pBtn) {
-          pricingType = pBtn.dataset.pricing;
-          document.querySelectorAll("#pricingTypeToggle .segBtn").forEach(b => b.classList.remove("active"));
-          pBtn.classList.add("active");
-          updatePricingMeta();
-          rerenderWithPricing();
-          return;
-        }
-
-        const mBtn = e.target.closest("#pricingMethodToggle .segBtn");
-        if (mBtn) {
-          pricingMethodMode = mBtn.dataset.method;
-          document.querySelectorAll("#pricingMethodToggle .segBtn").forEach(b => b.classList.remove("active"));
-          mBtn.classList.add("active");
-          updatePricingMeta();
-          rerenderWithPricing();
-          return;
-        }
-      });
-    }
-
-    function setCheckboxes(predicate) {
-      pits.forEach(pit => {
-        const cb = document.getElementById(`pitCheck-${pit.id}`);
-        if (cb) cb.checked = predicate(pit);
-      });
-    }
-
-    function getSelectedTrafficProfile() {
-      const el = document.querySelector('input[name="trafficProfile"]:checked');
-      return el ? el.value : 'typical';
-    }
-
-    function isWeekend(date) {
-      const day = date.getDay();
-      return day === 0 || day === 6;
-    }
-
-    function nextWeekdayOccurrence(hour, minute) {
-      const now = new Date();
-      const d = new Date(now);
-      d.setHours(hour, minute, 0, 0);
-
-      if (d <= now) d.setDate(d.getDate() + 1);
-      while (isWeekend(d)) d.setDate(d.getDate() + 1);
-
-      return d;
-    }
-
-    function trafficDrivingOptions(profile) {
-      if (profile === 'heavy') return { departureTime: nextWeekdayOccurrence(8, 0), trafficModel: "bestguess" };
-      if (profile === 'light') return { departureTime: nextWeekdayOccurrence(10, 30), trafficModel: "bestguess" };
-       return null; // Typical
-    }
-
-    function truckTypeLabel(value) {
-      if (value === 'truckPony') return 'Truck & pony';
-      if (value === 'transfer') return 'Truck & transfer';
-      return 'Tandem';
-    }
-    function formatDurationText(totalSeconds) {
-      const totalMinutes = Math.round(totalSeconds / 60);
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-
-      if (hours <= 0) return `${minutes} mins`;
-      if (minutes === 0) return `${hours} hour${hours === 1 ? "" : "s"}`;
-      return `${hours} hour${hours === 1 ? "" : "s"} ${minutes} mins`;
-    }
-
-    function formatDistanceText(totalMeters) {
-      const km = totalMeters / 1000;
-      return `${km.toFixed(1)} km`;
-    }
-
-     // Promisified Distance Matrix for ONE origin -> ONE destination
-     function getLegMetrics(originLatLng, destination, drivingOptions) {
-       return new Promise((resolve, reject) => {
-         const request = {
-           origins: [originLatLng],
-           destinations: [destination],
-           travelMode: google.maps.TravelMode.DRIVING,
-           unitSystem: google.maps.UnitSystem.METRIC
-         };
-         if (drivingOptions) request.drivingOptions = drivingOptions;
-
-         distanceService.getDistanceMatrix(request, (response, status) => {
-   if (status !== "OK") return reject(new Error(`DistanceMatrix status: ${status}`));
-
-   const el = response?.rows?.[0]?.elements?.[0];
-   if (!el || el.status !== "OK") {
-     return reject(new Error(`Route status: ${el?.status || "UNKNOWN"}`));
-   }
-
-  // Warn if we asked for traffic but Google didn't return it
-  if (drivingOptions && !el.duration_in_traffic) {
-    console.warn(
-      "⚠️ No duration_in_traffic returned (traffic profile ignored)",
-      {
-        origin: request.origins[0],
-        destination: request.destinations[0],
-        element: el
+        return;
       }
-    );
+
+     // Handle "Use bump" toggles inside the results table (event delegation)
+     document.getElementById("result")?.addEventListener("change", (e) => {
+      const el = e.target;
+      if (!el || !el.classList.contains("useBumpToggle")) return;
+
+     const pitId = el.getAttribute("data-pit");
+     bumpSelections[pitId] = !!el.checked;
+
+  rerenderWithPricing();
+});
+
+      const mBtn = e.target.closest("#pricingMethodToggle .segBtn");
+      if (mBtn) {
+        pricingMethodMode = mBtn.dataset.method;
+        document.querySelectorAll("#pricingMethodToggle .segBtn").forEach(b => b.classList.remove("active"));
+        mBtn.classList.add("active");
+        updatePricingMeta();
+        rerenderWithPricing();
+        return;
+      }
+    });
   }
 
-  // Use traffic duration when available, otherwise fall back
-  const durObj = (drivingOptions && el.duration_in_traffic)
-    ? el.duration_in_traffic
-    : el.duration;
+  function setCheckboxes(predicate) {
+    pits.forEach(pit => {
+      const cb = document.getElementById(`pitCheck-${pit.id}`);
+      if (cb) cb.checked = predicate(pit);
+    });
+  }
 
-  resolve({
-    durationSeconds: durObj.value,
-    distanceMeters: el.distance.value,
-    usedTraffic: !!(drivingOptions && el.duration_in_traffic)
-        });
-       });
-     });
-    }
-   // ============================
-   // CALCULATE CLICK (split-leg)
-   // ============================
-async function onCalculateClick() {
-  const address = document.getElementById('addressInput').value.trim();
-  const truckType = document.getElementById('truckType').value;
-  const bufferMinutes = truckBuffers[truckType] || 27;
-  const trafficProfile = getSelectedTrafficProfile();
-  const drivingOptions = trafficDrivingOptions(trafficProfile);
+  function getSelectedTrafficProfile() {
+    const el = document.querySelector('input[name="trafficProfile"]:checked');
+    return el ? el.value : 'typical';
+  }
 
-  const resultDiv = document.getElementById('result');
-  if (!address) { resultDiv.textContent = 'Please enter a delivery address.'; return; }
+  function isWeekend(date) { const day = date.getDay(); return day === 0 || day === 6; }
 
-  const activePits = pits.filter(pit => {
-    const cb = document.getElementById(`pitCheck-${pit.id}`);
-    return cb && cb.checked;
-  });
-  if (activePits.length === 0) { resultDiv.textContent = 'No pits selected.'; return; }
+  function nextWeekdayOccurrence(hour, minute) {
+    const now = new Date();
+    const d = new Date(now);
+    d.setHours(hour, minute, 0, 0);
+    if (d <= now) d.setDate(d.getDate() + 1);
+    while (isWeekend(d)) d.setDate(d.getDate() + 1);
+    return d;
+  }
 
-  resultDiv.textContent = 'Calculating...';
+  function trafficDrivingOptions(profile) {
+    if (profile === 'heavy') return { departureTime: nextWeekdayOccurrence(8, 0), trafficModel: "bestguess" };
+    if (profile === 'light') return { departureTime: nextWeekdayOccurrence(10, 30), trafficModel: "bestguess" };
+    return null;
+  }
 
-  try {
-    const perPit = activePits.map(async (pit) => {
-      const originPit = new google.maps.LatLng(pit.lat, pit.lng);
-      const dest = address;
+  function truckTypeLabel(value) {
+    if (value === 'truckPony') return 'Truck & pony';
+    if (value === 'transfer') return 'Truck & transfer';
+    return 'Tandem';
+  }
 
-      let oneWaySeconds = 0;
-      let oneWayMeters = 0;
+  function formatDurationText(totalSeconds) {
+    const totalMinutes = Math.round(totalSeconds / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
 
-      if (pit.truckAccess) {
-        const access = new google.maps.LatLng(pit.truckAccess.lat, pit.truckAccess.lng);
+    if (hours <= 0) return `${minutes} mins`;
+    if (minutes === 0) return `${hours} hour${hours === 1 ? "" : "s"}`;
+    return `${hours} hour${hours === 1 ? "" : "s"} ${minutes} mins`;
+  }
 
-        const leg1 = await getLegMetrics(originPit, access, drivingOptions);
-        const leg2 = await getLegMetrics(access, dest, drivingOptions);
+  function formatDistanceText(totalMeters) {
+    const km = totalMeters / 1000;
+    return `${km.toFixed(1)} km`;
+  }
 
-        oneWaySeconds = leg1.durationSeconds + leg2.durationSeconds;
-        oneWayMeters  = leg1.distanceMeters  + leg2.distanceMeters;
-      } else {
-        const leg = await getLegMetrics(originPit, dest, drivingOptions);
-        oneWaySeconds = leg.durationSeconds;
-        oneWayMeters  = leg.distanceMeters;
-      }
-
-      const roundTripSeconds = oneWaySeconds * 2;
-      const totalSeconds = roundTripSeconds + bufferMinutes * 60;
-
-      const totalMinutes = Math.round(totalSeconds / 60);
-      const totalHours = (totalMinutes / 60).toFixed(2);
-
-      const quotedMinutes = Math.ceil(totalMinutes / 15) * 15;
-      const billableHours = (quotedMinutes / 60).toFixed(2);
-
-      return {
-        pit,
-        oneWayText: formatDurationText(oneWaySeconds),
-        distanceText: formatDistanceText(oneWayMeters),
-        roundTripMinutes: Math.round(roundTripSeconds / 60),
-        totalMinutes,
-        totalHours,
-        quotedMinutes,
-        billableHours,
-        totalSeconds,
-        routedViaAccess: !!pit.truckAccess
+  // Promisified Distance Matrix for ONE origin -> ONE destination
+  function getLegMetrics(origin, destination, drivingOptions) {
+    return new Promise((resolve, reject) => {
+      const request = {
+        origins: [origin],
+        destinations: [destination],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.METRIC
       };
+      if (drivingOptions) request.drivingOptions = drivingOptions;
+
+      distanceService.getDistanceMatrix(request, (response, status) => {
+        if (status !== "OK") return reject(new Error(`DistanceMatrix status: ${status}`));
+
+        const el = response?.rows?.[0]?.elements?.[0];
+        if (!el || el.status !== "OK") {
+          return reject(new Error(`Route status: ${el?.status || "UNKNOWN"}`));
+        }
+        siteTight = false;
+        const st = document.getElementById("siteTightToggle");
+        if (st) st.checked = false;
+
+        // Warn if we asked for traffic but Google didn't return it
+        if (drivingOptions && !el.duration_in_traffic) {
+          console.warn("⚠️ No duration_in_traffic returned (traffic profile ignored)", {
+            origin: request.origins[0],
+            destination: request.destinations[0],
+            element: el
+          });
+        }
+
+        const durObj = (drivingOptions && el.duration_in_traffic) ? el.duration_in_traffic : el.duration;
+
+        resolve({
+          durationSeconds: durObj.value,
+          distanceMeters: el.distance.value,
+          usedTraffic: !!(drivingOptions && el.duration_in_traffic)
+        });
+      });
     });
+  }
 
-    const results = await Promise.all(perPit);
+  // ============================
+  // CALCULATE CLICK (FULL / KEEP ALL FEATURES)
+  // ============================
+  async function onCalculateClick() {
+    const address = document.getElementById('addressInput').value.trim();
+    const truckType = document.getElementById('truckType').value;
+    const trafficProfile = getSelectedTrafficProfile();
+    const drivingOptions = trafficDrivingOptions(trafficProfile);
 
-    if (results.length === 0) {
-      resultDiv.textContent = 'No valid routes found.';
-      return;
+    const resultDiv = document.getElementById('result');
+    if (!address) { resultDiv.textContent = 'Please enter a delivery address.'; return; }
+
+    const activePits = pits.filter(pit => {
+      const cb = document.getElementById(`pitCheck-${pit.id}`);
+      return cb && cb.checked;
+    });
+    if (activePits.length === 0) { resultDiv.textContent = 'No pits selected.'; return; }
+
+    resultDiv.textContent = 'Calculating...';
+
+    try {
+      // Prefer LatLng ONLY if they picked from dropdown
+      const hasLatLng = !!(deliveryPickedFromDropdown && deliveryLatLng);
+      const deliveryPoint = hasLatLng ? deliveryLatLng : address;
+
+      // SPLL west/east logic only works if we have LatLng
+      const deliveryIsWest = hasLatLng ? isWestOfSanscorp(deliveryLatLng) : false;
+
+      const notes = [];
+      if (!hasLatLng) notes.push("Tip: pick the address from the dropdown for best routing (SPLL yard rules need a confirmed pin).");
+
+      const perPit = activePits.map(async (pit) => {
+        const originPit = new google.maps.LatLng(pit.lat, pit.lng);
+
+        let outboundSeconds = 0;
+        let inboundSeconds = 0;
+        let outboundMeters = 0;
+        let inboundMeters = 0;
+
+        let routedSpecial = false;
+
+        // ---------- SPECIAL: SANSCORP YARD (SPLL) ----------
+        if (pit.id === "SPLL" && pit.specialRouting) {
+          routedSpecial = true;
+
+          const exitE = new google.maps.LatLng(pit.specialRouting.exitE.lat, pit.specialRouting.exitE.lng);
+          const turnaround = new google.maps.LatLng(pit.specialRouting.turnaround.lat, pit.specialRouting.turnaround.lng);
+          const entryW = new google.maps.LatLng(pit.specialRouting.entryW.lat, pit.specialRouting.entryW.lng);
+          const yard = new google.maps.LatLng(pit.specialRouting.yard.lat, pit.specialRouting.yard.lng);
+
+          const isTransferOrPony = (truckType === "transfer" || truckType === "truckPony");
+
+          // OUTBOUND (yard -> job)
+          if (hasLatLng && deliveryIsWest && isTransferOrPony) {
+            // force exit -> turnaround -> delivery
+            const leg1 = await getLegMetrics(exitE, turnaround, drivingOptions);
+            const leg2 = await getLegMetrics(turnaround, deliveryLatLng, drivingOptions);
+
+            outboundSeconds = leg1.durationSeconds + leg2.durationSeconds;
+            outboundMeters  = leg1.distanceMeters  + leg2.distanceMeters;
+          } else {
+            const leg = await getLegMetrics(exitE, deliveryPoint, drivingOptions);
+            outboundSeconds = leg.durationSeconds;
+            outboundMeters  = leg.distanceMeters;
+          }
+
+          // INBOUND (job -> yard)
+          if (hasLatLng && deliveryIsWest) {
+            const leg = await getLegMetrics(deliveryLatLng, entryW, drivingOptions);
+            inboundSeconds = leg.durationSeconds;
+            inboundMeters  = leg.distanceMeters;
+          } else {
+            const leg = await getLegMetrics(deliveryPoint, yard, drivingOptions);
+            inboundSeconds = leg.durationSeconds;
+            inboundMeters  = leg.distanceMeters;
+          }
+
+        } else {
+          // ---------- NORMAL PITS ----------
+          let oneWaySeconds = 0;
+          let oneWayMeters = 0;
+
+          if (pit.truckAccess) {
+            const access = new google.maps.LatLng(pit.truckAccess.lat, pit.truckAccess.lng);
+
+            const leg1 = await getLegMetrics(originPit, access, drivingOptions);
+            const leg2 = await getLegMetrics(access, deliveryPoint, drivingOptions);
+
+            oneWaySeconds = leg1.durationSeconds + leg2.durationSeconds;
+            oneWayMeters  = leg1.distanceMeters  + leg2.distanceMeters;
+          } else {
+            const leg = await getLegMetrics(originPit, deliveryPoint, drivingOptions);
+            oneWaySeconds = leg.durationSeconds;
+            oneWayMeters  = leg.distanceMeters;
+          }
+
+          outboundSeconds = oneWaySeconds;
+          inboundSeconds  = oneWaySeconds;
+          outboundMeters  = oneWayMeters;
+          inboundMeters   = oneWayMeters;
+        }
+
+        // Round trip DRIVE only
+        const roundTripSeconds = outboundSeconds + inboundSeconds;
+        const roundTripDriveMinutes = Math.round(roundTripSeconds / 60);
+
+        // Dynamic buffer per row (transfer logic)
+        const bufferMinutesUsed = getDynamicBufferMinutes(truckType, roundTripDriveMinutes);
+
+        // Total with buffer
+        const totalSeconds = roundTripSeconds + bufferMinutesUsed * 60;
+        const totalMinutes = Math.round(totalSeconds / 60);
+        const totalHours = (totalMinutes / 60).toFixed(2);
+
+        // Quoted / billable
+        const quotedMinutes = Math.ceil(totalMinutes / 15) * 15;
+        const billableHours = (quotedMinutes / 60).toFixed(2);
+
+        // Bump recommendation
+        const bump = computeBumpRecommendation(totalMinutes, quotedMinutes, billableHours);
+
+        // Distance display (if SPLL outbound/inbound differ, show avg one-way)
+        const avgOneWayMeters = (outboundMeters + inboundMeters) / 2;
+        const oneWayText = (pit.id === "SPLL")
+          ? `${formatDurationText(outboundSeconds)} out / ${formatDurationText(inboundSeconds)} back`
+          : formatDurationText(outboundSeconds);
+
+        return {
+          pit,
+          oneWayText,
+          distanceText: formatDistanceText(avgOneWayMeters),
+          roundTripMinutes: roundTripDriveMinutes,
+          bufferMinutesUsed,
+          totalMinutes,
+          totalHours,
+          quotedMinutes,
+          billableHours,
+          totalSeconds,
+          routedViaAccess: !!pit.truckAccess,
+          routedSpecial,
+
+          bumpRec: bump ? {
+            quotedMinutes: bump.recQuotedMinutes,
+            billableHours: bump.recBillableHours,
+            reason: bump.reason
+          } : null
+        };
+      });
+
+      const results = await Promise.all(perPit);
+
+      if (!results.length) {
+        resultDiv.textContent = 'No valid routes found.';
+        return;
+      }
+
+      let best = results[0];
+      for (const r of results) if (r.totalSeconds < best.totalSeconds) best = r;
+
+      const depLabel = drivingOptions?.departureTime
+        ? ` (next weekday departure: ${drivingOptions.departureTime.toLocaleString()})`
+        : '';
+
+      lastResultsCache = {
+        address,
+        truckType,
+        trafficProfile,
+        depLabel,
+        results,
+        best,
+        notes
+      };
+
+      rerenderWithPricing();
+
+    } catch (err) {
+      console.error(err);
+      resultDiv.textContent = `Error getting travel time: ${err.message}`;
+    }
+  }
+
+  // ============================
+  // RENDER TABLE (PRICING)
+  // ============================
+  function rerenderWithPricing() {
+    if (!lastResultsCache) return;
+
+    const { address, truckType, trafficProfile, depLabel, results, best, notes } = lastResultsCache;
+    const equipmentKey = EQUIPMENT_MAP[truckType] || "TANDEM";
+    const method = resolvedPricingMethod(equipmentKey);
+
+    const profileLabel =
+      trafficProfile === 'heavy' ? 'Heavy (8:00 AM)' :
+      trafficProfile === 'light' ? 'Light (10:30 AM)' :
+      'Typical (default)';
+
+    let html = `
+      <h3>Results for: ${address}</h3>
+      <p class="tiny">
+        Truck type: <strong>${truckTypeLabel(truckType)}</strong>
+        — <strong>buffer shown per row</strong> (transfer uses dynamic buffer)<br>
+        Traffic profile: <strong>${profileLabel}</strong>${depLabel}<br>
+        Total = round-trip drive + buffer. Quoted (15-min) rounds up for quoting. Billable (hrs) = quoted time in 0.25 hr steps.<br>
+        <strong>Pricing:</strong> ${pricingType} • <strong>Method:</strong> ${method} • mins enforced after table Billable (hrs).
+      </p>
+    `;
+
+    if (notes && notes.length) {
+      html += `<p class="tiny" style="color:#8a5a00"><strong>Note:</strong> ${notes.join(" • ")}</p>`;
     }
 
-    let best = results[0];
-    for (const r of results) if (r.totalSeconds < best.totalSeconds) best = r;
+    html += `
+      <table>
+        <thead>
+          <tr>
+            <th>Pit</th>
+            <th>Code</th>
+            <th>Material(s)</th>
+            <th>Distance (one-way)</th>
+            <th>One-way time</th>
+            <th>Round-trip (min)</th>
+            <th>Buffer (min)</th>
+            <th>Total (min)</th>
+            <th>Total (hrs)</th>
+            <th>Quoted (15-min)</th>
+            <th>Billable (hrs)</th>
+            <th>Billable used</th>
+            <th>Rec</th>
+            ${method === "HOURLY"
+              ? `
+                <th>Charge</th>
+                <th>Pay</th>
+                ${SHOW_MARGIN_COLUMN ? "<th>Margin</th>" : ""}
+              `
+              : `
+                <th>Charge $/t</th>
+                <th>Pay $/t</th>
+              `
+            }
+          </tr>
+        </thead>
+        <tbody>
+    `;
 
-    const depLabel = drivingOptions?.departureTime
-      ? ` (next weekday departure: ${drivingOptions.departureTime.toLocaleString()})`
-      : '';
+    for (const r of results) {
+      const isBest = r.pit.id === best.pit.id;
+      const matLabel = r.pit.materials ? r.pit.materials.join(' + ') : r.pit.material;
 
-    lastResultsCache = { address, truckType, bufferMinutes, trafficProfile, depLabel, results, best };
-    rerenderWithPricing();
+const pitId = r.pit.id;
+const isBumpOn = !!bumpSelections[pitId];
 
-  } catch (err) {
-    console.error(err);
-    resultDiv.textContent = `Error getting travel time: ${err.message}`;
+// base pricing (normal)
+const pricedBase = priceRow({ equipmentKey, billableHoursFromTable: r.billableHours });
+
+// bumped pricing (only if bump exists AND checkbox on)
+const bumpHours = (r.bumpRec && isBumpOn) ? Number(r.bumpRec.billableHours) : null;
+const pricedBump = bumpHours !== null
+  ? priceRow({ equipmentKey, billableHoursFromTable: bumpHours.toFixed(2) })
+  : null;
+
+// this is what the row displays
+const pricedDisplay = pricedBump || pricedBase;
+
+// Rec cell (clean icon + hover reason + checkbox)
+const recCell = r.bumpRec
+  ? `
+    <div class="recCell">
+      <div class="recTop">
+        <span class="recIconWrap">
+          <span class="recIcon" title="Bump available">↑</span>
+          <span class="recTip">Bump → ${r.bumpRec.billableHours} hrs</span>
+        </span>
+
+        <label class="recToggleRow" style="margin-top:0;">
+          <input type="checkbox" class="useBumpToggle" data-pit="${pitId}" ${isBumpOn ? "checked" : ""}>
+          Use bump
+        </label>
+      </div>
+
+      <div class="recReason">${r.bumpRec.reason}</div>
+    </div>
+  `
+  : `<span class="tiny" style="opacity:0.6;">—</span>`;
+  
+
+      html += `
+        <tr class="${isBest ? 'best-row' : ''}">
+          <td>${r.pit.name}${isBest ? ' <span style="color:var(--sanscorp-blue)">★</span>' : ''}</td>
+          <td>${r.pit.code}</td>
+          <td>${matLabel || 'n/a'}</td>
+          <td>${r.distanceText}</td>
+          <td>${r.oneWayText}</td>
+          <td>${r.roundTripMinutes}</td>
+          <td>${(r.bufferMinutesUsed ?? '').toString()}</td>
+          <td>${r.totalMinutes}</td>
+          <td>${r.totalHours}</td>
+          <td>${r.quotedMinutes}</td>
+          <td>${r.billableHours}</td>
+         <td>${Number(pricedDisplay.billableHrsUsed).toFixed(2)}</td>
+          <td>${recCell}</td>
+
+          ${method === "HOURLY"
+            ? `
+              <td>
+              <div class="${pricedBump ? "moneyStrong" : ""}">
+              ${money(pricedDisplay.chargeTotal)}
+              </div>
+               ${pricedBump ? `<div class="moneySubtle">${money(pricedBase.chargeTotal)} (base)</div>` : ``}
+            </td>
+           <td>
+        <div class="${pricedBump ? "moneyStrong" : ""}">
+          ${money(pricedDisplay.payTotal)}
+        </div>
+        ${pricedBump ? `<div class="moneySubtle">${money(pricedBase.payTotal)} (base)</div>` : ``}
+       </td>
+         ${SHOW_MARGIN_COLUMN ? `<td>${money(pricedDisplay.margin)}</td>` : ""}
+            `
+            : `
+              <td>
+              <div class="${pricedBump ? "moneyStrong" : ""}">
+                ${pricedDisplay.error
+             ? `<span class="tiny" style="color:#b00020">${pricedDisplay.error}</span>`
+               : money(pricedDisplay.chargePerTonne)}
+            </div>
+            ${pricedBump ? `<div class="moneySubtle">${money(pricedBase.chargePerTonne)} (base)</div>` : ``}
+    </td>
+      <td>
+        <div class="${pricedBump ? "moneyStrong" : ""}">
+       ${pricedDisplay.error ? "" : money(pricedDisplay.payPerTonne)}
+     </div>
+    ${pricedBump ? `<div class="moneySubtle">${money(pricedBase.payPerTonne)} (base)</div>` : ``}
+  </td>
+            `
+          }
+        </tr>
+      `;
+    }
+
+    html += `
+        </tbody>
+      </table>
+
+      <p class="tiny">
+        <strong>Fastest pit:</strong> ${best.pit.code} – ${best.pit.name}
+        (about ${best.totalMinutes} min total, quoted as ${best.quotedMinutes} min / ${best.billableHours} hrs).
+      </p>
+    `;
+
+    document.getElementById("result").innerHTML = html;
+    updatePricingMeta();
   }
-}
 
-    // Notes popup wiring
-    window.addEventListener('DOMContentLoaded', () => {
-      const notesBtn = document.getElementById('notesBtn');
-      const notesOverlay = document.getElementById('notesOverlay');
-
-      if (notesBtn && notesOverlay) {
-        notesBtn.addEventListener('click', () => { notesOverlay.style.display = 'block'; });
-        notesOverlay.addEventListener('click', (e) => {
-          if (e.target === notesOverlay) notesOverlay.style.display = 'none';
-        });
-      }
+  // ============================
+  // INIT MAP
+  // ============================
+  function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: 49.217, lng: -122.5 },
+      zoom: 10
     });
-  </script>
+
+    distanceService = new google.maps.DistanceMatrixService();
+
+    // Site tight toggle
+    document.getElementById("siteTightToggle")?.addEventListener("change", (e) => {
+      siteTight = !!e.target.checked;
+      rerenderWithPricing(); // refresh display if results exist
+    });
+
+    // Address input typing resets lat/lng
+    document.getElementById('addressInput')?.addEventListener('input', () => {
+      deliveryLatLng = null;
+      deliveryPickedFromDropdown = false;
+      updateMapsLink();
+    });
+
+    // Places Autocomplete
+    const addressInput = document.getElementById("addressInput");
+    const ac = new google.maps.places.Autocomplete(addressInput, {
+      fields: ["geometry", "formatted_address", "name"],
+      componentRestrictions: { country: "ca" }
+    });
+
+    ac.addListener("place_changed", () => {
+      const place = ac.getPlace();
+      deliveryLatLng = place?.geometry?.location || null;
+      deliveryPickedFromDropdown = !!deliveryLatLng;
+
+      if (place?.formatted_address) {
+        addressInput.value = place.formatted_address;
+      }
+      updateMapsLink();
+    });
+
+    // Build pit select + checklist + markers
+    const pitSelect = document.getElementById('pitSelect');
+    const pitListDiv = document.getElementById('pitList');
+
+    pits.forEach((pit, index) => {
+      const option = document.createElement('option');
+      option.value = pit.id;
+      option.textContent = `${pit.code} – ${pit.name}`;
+      pitSelect.appendChild(option);
+
+      const wrapper = document.createElement('div');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = `pitCheck-${pit.id}`;
+      cb.checked = !!pit.priority || pit.code.startsWith('SP');
+
+      const matLabel = pit.materials ? pit.materials.join(' + ') : pit.material;
+      const lbl = document.createElement('label');
+      lbl.setAttribute('for', cb.id);
+      lbl.textContent = ` ${pit.code} – ${pit.name} (${matLabel || 'n/a'})${pit.priority ? ' [priority]' : ''}`;
+
+      wrapper.appendChild(cb);
+      wrapper.appendChild(lbl);
+      pitListDiv.appendChild(wrapper);
+
+      new google.maps.Marker({
+        position: { lat: pit.lat, lng: pit.lng },
+        map: map,
+        title: `${pit.code} – ${pit.name}`
+      });
+
+      if (index === 0) map.setCenter({ lat: pit.lat, lng: pit.lng });
+    });
+
+    pitSelect.addEventListener('change', () => {
+      const pit = pits.find(p => p.id === pitSelect.value);
+      if (pit) { map.setCenter({ lat: pit.lat, lng: pit.lng }); map.setZoom(11); }
+    });
+
+    // Buttons
+    document.getElementById('btnAll')?.addEventListener('click', () => setCheckboxes(() => true));
+    document.getElementById('btnPriority')?.addEventListener('click', () => setCheckboxes(p => !!p.priority));
+    document.getElementById('btnAggregate')?.addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('aggregate') : p.material === 'aggregate')));
+    document.getElementById('btnSoil')?.addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('soil') : p.material === 'soil')));
+    document.getElementById('btndumpsites')?.addEventListener('click', () => setCheckboxes(p => (p.materials ? p.materials.includes('dumpsites') : p.material === 'dumpsites')));
+    document.getElementById("btnClearAllPits")?.addEventListener("click", () => setCheckboxes(() => false));
+
+    // Calc
+    document.getElementById('calcBtn')?.addEventListener('click', onCalculateClick);
+
+    // Toggles
+    bindToggles();
+    document.getElementById("truckType")?.addEventListener("change", () => {
+      updatePricingMeta();
+      rerenderWithPricing();
+    });
+
+    updateMapsLink();
+    updatePricingMeta();
+  }
+
+  // Notes popup wiring
+  window.addEventListener('DOMContentLoaded', () => {
+    const notesBtn = document.getElementById('notesBtn');
+    const notesOverlay = document.getElementById('notesOverlay');
+
+    if (notesBtn && notesOverlay) {
+      notesBtn.addEventListener('click', () => { notesOverlay.style.display = 'block'; });
+      notesOverlay.addEventListener('click', (e) => {
+        if (e.target === notesOverlay) notesOverlay.style.display = 'none';
+      });
+    }
+  });
+
+  // expose initMap for callback
+  window.initMap = initMap;
+</script>
 
   <!-- IMPORTANT: Put your Google Maps API key below -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAirWbZFX7EKBEjPACKk-XPw9i1RNcP9x8&callback=initMap"
+  <!-- NOTE: libraries=places is REQUIRED for address dropdown + lat/lng (avoids Geocode REQUEST_DENIED) -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAirWbZFX7EKBEjPACKk-XPw9i1RNcP9x8&libraries=places&callback=initMap"
     async defer>
-    </script>
+  </script>
 </body>
 
-
 </html>
-
-
-
-
-
